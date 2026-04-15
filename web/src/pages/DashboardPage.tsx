@@ -1,0 +1,193 @@
+import { useQuery } from '@tanstack/react-query';
+import axios from 'axios';
+import { 
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
+  LineChart, Line, Cell
+} from 'recharts';
+import { 
+  TrendingUp, Users, Package, AlertCircle, 
+  ArrowUpRight, ArrowDownRight, Activity
+} from 'lucide-react';
+
+const COLORS = ['#000000', '#404040', '#737373', '#A3A3A3', '#D4D4D4'];
+
+interface DashboardStats {
+  totalRevenue: number;
+  totalOrders: number;
+  averageOccupancy: number;
+  damageRate: number;
+  topModels: Array<{ modelName: string; rentalCount: number }>;
+  revenueTrend: Array<{ date: string; amount: number }>;
+}
+
+const StatCard = ({ title, value, icon: Icon, trend, trendValue }: any) => (
+  <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300 group">
+    <div className="flex justify-between items-start mb-4">
+      <div className="p-3 bg-slate-50 rounded-xl group-hover:bg-black group-hover:text-white transition-colors duration-300">
+        <Icon className="w-5 h-5" />
+      </div>
+      {trend && (
+        <div className={`flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-full ${
+          trend === 'up' ? 'text-emerald-600 bg-emerald-50' : 'text-rose-600 bg-rose-50'
+        }`}>
+          {trend === 'up' ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+          {trendValue}%
+        </div>
+      )}
+    </div>
+    <p className="text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">{title}</p>
+    <p className="text-3xl font-black tracking-tighter">{value}</p>
+  </div>
+);
+
+export default function DashboardPage() {
+  const { data: stats, isLoading } = useQuery<DashboardStats>({
+    queryKey: ['dashboard-stats'],
+    queryFn: async () => {
+      const { data } = await axios.get('/api/reports/dashboard');
+      return data;
+    }
+  });
+
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-4 gap-6 animate-pulse">
+        {[1, 2, 3, 4].map(i => (
+          <div key={i} className="h-40 bg-slate-100 rounded-2xl" />
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-8 pb-12">
+      <div className="flex justify-between items-end">
+        <div>
+          <h1 className="text-4xl font-black tracking-tighter mb-2 italic">DASHBOARD</h1>
+          <p className="text-slate-400 font-medium tracking-tight">Real-time business intelligence & assets health</p>
+        </div>
+        <div className="flex gap-2">
+          <div className="px-4 py-2 bg-black text-white rounded-xl text-sm font-bold shadow-lg shadow-black/10 flex items-center gap-2 cursor-pointer">
+            <Activity className="w-4 h-4" /> Live Updates
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <StatCard 
+          title="Total Revenue" 
+          value={`$${stats?.totalRevenue?.toLocaleString()}`} 
+          icon={TrendingUp}
+          trend="up"
+          trendValue="12.5"
+        />
+        <StatCard 
+          title="Total Orders" 
+          value={stats?.totalOrders} 
+          icon={Users}
+          trend="up"
+          trendValue="8.2"
+        />
+        <StatCard 
+          title="Branch Occupancy" 
+          value={`${stats?.averageOccupancy}%`} 
+          icon={Package}
+          trend="down"
+          trendValue="3.1"
+        />
+        <StatCard 
+          title="Damage Rate" 
+          value={`${stats?.damageRate}%`} 
+          icon={AlertCircle}
+          trend="down"
+          trendValue="0.8"
+        />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-12">
+        <div className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm">
+          <div className="flex justify-between items-center mb-8">
+            <h3 className="text-xl font-black tracking-tight italic uppercase">Revenue Trend</h3>
+            <select className="bg-slate-50 border-none rounded-lg text-xs font-bold p-2 outline-none">
+              <option>Last 30 Days</option>
+              <option>Last 6 Months</option>
+            </select>
+          </div>
+          <div className="h-[350px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={stats?.revenueTrend}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
+                <XAxis 
+                  dataKey="date" 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={{fill: '#94A3B8', fontSize: 10, fontWeight: 700}}
+                  dy={10}
+                />
+                <YAxis 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={{fill: '#94A3B8', fontSize: 10, fontWeight: 700}}
+                />
+                <Tooltip 
+                  contentStyle={{ 
+                    borderRadius: '16px', 
+                    border: 'none', 
+                    boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
+                    fontWeight: 700,
+                    fontSize: '12px'
+                  }} 
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="amount" 
+                  stroke="#000" 
+                  strokeWidth={4} 
+                  dot={{ r: 4, fill: '#000', strokeWidth: 2, stroke: '#fff' }}
+                  activeDot={{ r: 8, fill: '#000' }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        <div className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm">
+          <h3 className="text-xl font-black tracking-tight italic uppercase mb-8">Top Rental Models</h3>
+          <div className="h-[350px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={stats?.topModels} layout="vertical">
+                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#F1F5F9" />
+                <XAxis type="number" hide />
+                <YAxis 
+                  dataKey="modelName" 
+                  type="category" 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={{fill: '#000', fontSize: 11, fontWeight: 800}}
+                  width={150}
+                />
+                <Tooltip 
+                   contentStyle={{ 
+                    borderRadius: '16px', 
+                    border: 'none', 
+                    boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
+                  }}
+                />
+                <Bar 
+                  dataKey="rentalCount" 
+                  fill="#000" 
+                  radius={[0, 8, 8, 0]} 
+                  barSize={24}
+                >
+                  {stats?.topModels?.map((_, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
