@@ -1,0 +1,42 @@
+version: '3.9'
+
+services:
+  # ===== PostgreSQL Database =====
+  db:
+    image: postgres:16-alpine
+    container_name: toolsly-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: toolsly
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-toolsly_secret}
+    ports:
+      - "5432:5432"
+    volumes:
+      - toolsly-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ===== Spring Boot Backend =====
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: toolsly-backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/toolsly
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-toolsly_secret}
+      JWT_SECRET: ${JWT_SECRET:-404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
+    ports:
+      - "8080:8080"
+
+volumes:
+  toolsly-data:

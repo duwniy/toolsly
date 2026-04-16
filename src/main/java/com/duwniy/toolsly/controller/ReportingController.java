@@ -20,7 +20,7 @@ public class ReportingController {
 
     @GetMapping("/dashboard-stats")
     @Operation(summary = "Get current business KPIs", description = "Returns revenue, order counts, and top models")
-    public ResponseEntity<DashboardStats> getDashboardStats() {
-        return ResponseEntity.ok(reportingService.getDashboardStats());
+    public ResponseEntity<DashboardStats> getDashboardStats(@org.springframework.web.bind.annotation.RequestParam(required = false) java.util.UUID branchId) {
+        return ResponseEntity.ok(reportingService.getDashboardStats(branchId));
     }
 }

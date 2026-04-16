@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import axios from 'axios';
+import apiClient from '../api/apiClient';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
   LineChart, Line, Cell
@@ -8,6 +8,7 @@ import {
   TrendingUp, Users, Package, AlertCircle, 
   ArrowUpRight, ArrowDownRight, Activity
 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 const COLORS = ['#000000', '#404040', '#737373', '#A3A3A3', '#D4D4D4'];
 
@@ -41,12 +42,16 @@ const StatCard = ({ title, value, icon: Icon, trend, trendValue }: any) => (
 );
 
 export default function DashboardPage() {
-  const { data: stats, isLoading } = useQuery<DashboardStats>({
-    queryKey: ['dashboard-stats'],
+  const { user } = useAuth();
+  const { data: stats, isLoading, isError, error, refetch } = useQuery<DashboardStats>({
+    queryKey: ['dashboard-stats', user?.branchId],
     queryFn: async () => {
-      const { data } = await axios.get('/api/reports/dashboard');
+      const { data } = await apiClient.get('/api/reporting/dashboard-stats', {
+        params: { branchId: user?.branchId }
+      });
       return data;
-    }
+    },
+    retry: 2,
   });
 
   if (isLoading) {
@@ -55,6 +60,28 @@ export default function DashboardPage() {
         {[1, 2, 3, 4].map(i => (
           <div key={i} className="h-40 bg-slate-100 rounded-2xl" />
         ))}
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="flex flex-col items-center justify-center py-32 space-y-6">
+        <div className="p-5 bg-rose-50 rounded-full">
+          <AlertCircle className="w-10 h-10 text-rose-500" />
+        </div>
+        <div className="text-center space-y-2">
+          <h2 className="text-2xl font-black tracking-tighter italic uppercase">Connection Failed</h2>
+          <p className="text-slate-400 font-medium max-w-md">
+            {(error as any)?.response?.data?.message || 'Unable to load dashboard data. The backend service may be unreachable.'}
+          </p>
+        </div>
+        <button
+          onClick={() => refetch()}
+          className="px-8 py-3 bg-black text-white rounded-2xl font-black italic hover:scale-105 active:scale-95 transition-all shadow-xl shadow-black/10"
+        >
+          RETRY
+        </button>
       </div>
     );
   }

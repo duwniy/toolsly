@@ -14,6 +14,13 @@ The system automates price calculation based on the following logic:
 - **Storage Limit**: A Branch cannot accept a return if its current item count reaches `storage_capacity`.
 - **Inter-branch Returns**: Allowed by default, provided capacity exists.
 
+## 4. Penalty Logic
+- **Overdue Penalty**: `+50%` of daily rate for each overdue day.
+- **Damage Scenarios**:
+  - `GOOD`: No penalty.
+  - `WORN`: `10%` of equipment market value.
+  - `BROKEN`: `50%` of equipment market value.
+
 ## 4. Concurrency (Soft Lock)
 - **Duration**: 15 minutes.
 - **Cleanup**: An automated task or database trigger must release `RESERVED` items back to `AVAILABLE` if the order isn't issued within the window.

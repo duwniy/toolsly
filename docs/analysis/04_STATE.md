@@ -1,30 +1,16 @@
-# Project State: Toolsly (Milestones 1-4 Complete)
+# State of the Project
 
-## Milestone Tracker
-- [x] Phase 0: Analysis & Design
-- [x] Milestone 1: System Core & Infrastructure
-- [x] Milestone 2: Business Logic & State Machine
-- [x] Milestone 3: Frontend Foundation & API Layer
-- [x] Milestone 4: Advanced Logistics & Analytics
+## Phase: Foundation & Skeleton
+- [x] **Mile 1**: Project Setup, Base Entities, and Category Registry
+- [x] **Mile 2**: Equipment Models & Catalog API
+- [x] **Mile 3**: Inventory Management & Branch Registry
+- [x] **Mile 4**: Renter Profiles & Verification Logic
 
-## 🚩 Current Status
-**System Fully Operational**: Backend (Spring Boot 3 + JPA) & Frontend (Vite + React + Recharts) are integrated.
+## Phase: Business Logic & UAT
+- [x] **Mile 5**: Core Logic, Penalty Calculation, and Order Lifecycle
+- [x] **Mile 6**: Data Seeding, Migration (Flyway), and UAT Readiness
+- [x] **Mile 7**: Authentication, JWT Integration, and Quick Access Stubs [CURRENT]
 
-## 📊 Progress
-- [x] Milestone 0: Documentation Setup
-- [x] Milestone 1: System Core & Infrastructure
-- [x] Milestone 2: Business Logic & State Machine
-- [x] Milestone 3: Frontend Foundation & API Layer
-- [x] Milestone 4: Advanced Logistics & Analytics
-
-## 📅 Roadmap (Complete)
-- **M1: System Core** (UUID, PostgreSQL, Audit) - **DONE**
-- **M2: Business Logic** (Pricing, State Machine) - **DONE**
-- **M3: Frontend & API** (Swagger, React, Dashboards) - **DONE**
-- **M4: Advanced Logistics** (Storage Checks, BI Dashboard) - **DONE**
-
-## Current Focus
-Infrastructure stability and preparing for final deployment/demo.
-
-## Last Update
-2026-04-16: Milestone 4 complete. Successfully implemented capacity-aware returns and Recharts-based business intelligence.
+## Phase: Advanced Features (Planned)
+- [ ] **Mile 8**: Equipment Lifecycle, Maintenance & Retirement
+- [ ] **Mile 9**: Advanced Analytics & Predictive Maintenance

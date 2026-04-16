@@ -61,4 +61,20 @@ public class OpenApiConfig {
                 .pathsToMatch("/api/inventory/**")
                 .build();
     }
+
+    @Bean
+    public GroupedOpenApi analyticsApi() {
+        return GroupedOpenApi.builder()
+                .group("Analytics")
+                .pathsToMatch("/api/reporting/**")
+                .build();
+    }
+
+    @Bean
+    public GroupedOpenApi allApi() {
+        return GroupedOpenApi.builder()
+                .group("All API")
+                .pathsToMatch("/api/**")
+                .build();
+    }
 }

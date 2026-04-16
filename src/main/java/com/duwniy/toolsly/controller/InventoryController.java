@@ -28,9 +28,14 @@ public class InventoryController {
     private final EquipmentItemMapper itemMapper;
 
     @GetMapping("/items")
-    @Operation(summary = "List all equipment items", description = "Filter by branch or status (internal use)")
-    public ResponseEntity<List<EquipmentItemResponse>> getAllItems() {
-        List<EquipmentItem> items = itemRepository.findAll();
+    @Operation(summary = "List equipment items", description = "Filter by branch or status")
+    public ResponseEntity<List<EquipmentItemResponse>> getAllItems(@RequestParam(required = false) UUID branchId) {
+        List<EquipmentItem> items;
+        if (branchId != null) {
+            items = itemRepository.findByBranchId(branchId);
+        } else {
+            items = itemRepository.findAll();
+        }
         return ResponseEntity.ok(items.stream().map(itemMapper::toResponse).toList());
     }
 

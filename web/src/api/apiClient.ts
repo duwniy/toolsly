@@ -20,7 +20,12 @@ apiClient.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem('token');
-      window.location.href = '/login';
+      localStorage.removeItem('user');
+      const isLoginRequest = typeof error.config?.url === 'string' && error.config.url.includes('/api/auth/login');
+      const isAlreadyOnLoginPage = window.location.pathname === '/login';
+      if (!isLoginRequest && !isAlreadyOnLoginPage) {
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }

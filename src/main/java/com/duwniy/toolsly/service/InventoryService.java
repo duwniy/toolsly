@@ -5,6 +5,7 @@ import com.duwniy.toolsly.entity.Condition;
 import com.duwniy.toolsly.entity.EquipmentItem;
 import com.duwniy.toolsly.entity.ItemStatus;
 import com.duwniy.toolsly.repository.EquipmentItemRepository;
+import com.duwniy.toolsly.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,7 +22,7 @@ public class InventoryService {
     @Transactional
     public void updateStatus(UUID itemId, ItemStatus newStatus) {
         EquipmentItem item = itemRepository.findById(itemId)
-                .orElseThrow(() -> new RuntimeException("Item not found"));
+                .orElseThrow(() -> new BusinessException("Item not found", "ITEM_NOT_FOUND"));
         item.setStatus(newStatus);
         itemRepository.save(item);
     }
@@ -30,7 +31,7 @@ public class InventoryService {
     public void updateLocation(UUID itemId, Branch newBranch) {
         // Need to check storage capacity here in OrderService or here
         EquipmentItem item = itemRepository.findById(itemId)
-                .orElseThrow(() -> new RuntimeException("Item not found"));
+                .orElseThrow(() -> new BusinessException("Item not found", "ITEM_NOT_FOUND"));
         item.setBranch(newBranch);
         itemRepository.save(item);
     }
@@ -38,7 +39,7 @@ public class InventoryService {
     @Transactional
     public void setSoftLock(UUID itemId, int minutes) {
         EquipmentItem item = itemRepository.findById(itemId)
-                .orElseThrow(() -> new RuntimeException("Item not found"));
+                .orElseThrow(() -> new BusinessException("Item not found", "ITEM_NOT_FOUND"));
         item.setReservedUntil(OffsetDateTime.now().plusMinutes(minutes));
         item.setStatus(ItemStatus.AVAILABLE); // Keep available but with lock logic in queries
         itemRepository.save(item);
@@ -47,7 +48,7 @@ public class InventoryService {
     @Transactional
     public void updateCondition(UUID itemId, Condition condition) {
         EquipmentItem item = itemRepository.findById(itemId)
-                .orElseThrow(() -> new RuntimeException("Item not found"));
+                .orElseThrow(() -> new BusinessException("Item not found", "ITEM_NOT_FOUND"));
         item.setCondition(condition);
         itemRepository.save(item);
     }

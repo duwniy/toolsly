@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -35,6 +36,12 @@ public class OrderController {
     public ResponseEntity<Void> reserveOrder(@PathVariable UUID id) {
         orderService.reserveOrder(id);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/{id}")
+    @Operation(summary = "Get order details", description = "Returns an order view tailored for issue and return flows")
+    public ResponseEntity<OrderResponse> getOrder(@PathVariable UUID id) {
+        return ResponseEntity.ok(orderService.getOrderById(id));
     }
 
     @PostMapping("/{id}/issue")

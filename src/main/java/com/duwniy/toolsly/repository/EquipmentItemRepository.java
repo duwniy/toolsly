@@ -7,4 +7,5 @@ import java.util.UUID;
 
 public interface EquipmentItemRepository extends JpaRepository<EquipmentItem, UUID> {
     long countByBranch(Branch branch);
+    java.util.List<EquipmentItem> findByBranchId(UUID branchId);
 }

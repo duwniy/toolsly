@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { Search, CheckCircle2, AlertCircle, PackageCheck } from 'lucide-react';
+import { toast } from 'sonner';
 import apiClient from '../api/apiClient';
+import { useAuth } from '../context/AuthContext';
 
 interface Order {
   id: string;
@@ -13,6 +15,7 @@ interface Order {
 export default function IssueToolPage() {
   const [orderId, setOrderId] = useState('');
   const [searchId, setSearchId] = useState('');
+  const { user } = useAuth();
 
   const { data: order, isLoading, error, refetch } = useQuery({
     queryKey: ['order', searchId],
@@ -26,16 +29,15 @@ export default function IssueToolPage() {
 
   const issueMutation = useMutation({
     mutationFn: async (id: string) => {
-      // Dummy staff ID for now. In real app, get from auth context.
-      const staffId = '00000000-0000-0000-0000-000000000000'; 
-      await apiClient.post(`/api/orders/${id}/issue?staffId=${staffId}`);
+      if (!user?.userId) return;
+      await apiClient.post(`/api/orders/${id}/issue?staffId=${user.userId}`);
     },
     onSuccess: () => {
       refetch();
-      alert('Order issued successfully!');
+      toast.success('Order issued successfully!');
     },
     onError: (err: any) => {
-      alert(`Error: ${err.response?.data?.message || err.message}`);
+      toast.error(err.response?.data?.message || err.message);
     }
   });
 
