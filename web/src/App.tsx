@@ -5,6 +5,7 @@ import { PackageCheck, LayoutGrid, User, Hammer, LogOut } from 'lucide-react';
 import IssueToolPage from './pages/IssueToolPage';
 import DashboardPage from './pages/DashboardPage';
 import ReturnsPage from './pages/ReturnsPage';
+import CatalogPage from './pages/CatalogPage';
 import { LoginPage } from './pages/LoginPage';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
@@ -36,8 +37,14 @@ function Layout({ children }: { children: React.ReactNode }) {
         
         <nav className="flex-1 space-y-1">
           <p className="px-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Menu</p>
-          <NavLink to="/" className={navLinkClass}>
-            <LayoutGrid className="w-4 h-4" /> Dashboard
+          {(user?.role === 'STAFF' || user?.role === 'ADMIN') && (
+            <NavLink to="/" className={navLinkClass}>
+              <LayoutGrid className="w-4 h-4" /> Dashboard
+            </NavLink>
+          )}
+          
+          <NavLink to="/catalog" className={navLinkClass}>
+            <PackageCheck className="w-4 h-4" /> Catalog
           </NavLink>
           
           <div className="pt-6">
@@ -79,7 +86,7 @@ function Layout({ children }: { children: React.ReactNode }) {
           <div className="flex items-center gap-4">
             <div className="text-right">
               <p className="text-xs font-bold leading-none">{user?.email}</p>
-              <p className="text-[10px] text-slate-400 font-medium tracking-wide">BRANCH: {user?.branchId || 'N/A'}</p>
+              <p className="text-[10px] text-slate-400 font-medium tracking-wide">BRANCH: {user?.branchId || 'GLOBAL'}</p>
             </div>
             <div className="w-9 h-9 rounded-full bg-slate-100 border border-slate-200" />
           </div>
@@ -93,35 +100,52 @@ function Layout({ children }: { children: React.ReactNode }) {
   );
 }
 
+const AppRoutes = () => {
+  const { user } = useAuth();
+  
+  return (
+    <Routes>
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/" element={
+        <ProtectedRoute>
+          {user?.role === 'RENTER' ? <Navigate to="/catalog" /> : (
+            <Layout>
+              <DashboardPage />
+            </Layout>
+          )}
+        </ProtectedRoute>
+      } />
+      <Route path="/catalog" element={
+        <ProtectedRoute>
+          <Layout>
+            <CatalogPage />
+          </Layout>
+        </ProtectedRoute>
+      } />
+      <Route path="/issue" element={
+        <ProtectedRoute>
+          <Layout>
+            <IssueToolPage />
+          </Layout>
+        </ProtectedRoute>
+      } />
+      <Route path="/returns" element={
+        <ProtectedRoute>
+          <Layout>
+            <ReturnsPage />
+          </Layout>
+        </ProtectedRoute>
+      } />
+    </Routes>
+  );
+};
+
 function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
         <Toaster position="top-right" richColors />
-        <Routes>
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/" element={
-            <ProtectedRoute>
-              <Layout>
-                <DashboardPage />
-              </Layout>
-            </ProtectedRoute>
-          } />
-          <Route path="/issue" element={
-            <ProtectedRoute>
-              <Layout>
-                <IssueToolPage />
-              </Layout>
-            </ProtectedRoute>
-          } />
-          <Route path="/returns" element={
-            <ProtectedRoute>
-              <Layout>
-                <ReturnsPage />
-              </Layout>
-            </ProtectedRoute>
-          } />
-        </Routes>
+        <AppRoutes />
       </BrowserRouter>
     </AuthProvider>
   );

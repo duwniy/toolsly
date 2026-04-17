@@ -30,7 +30,7 @@ export default function IssueToolPage() {
   const issueMutation = useMutation({
     mutationFn: async (id: string) => {
       if (!user?.userId) return;
-      await apiClient.post(`/api/orders/${id}/issue?staffId=${user.userId}`);
+      await apiClient.post(`/api/orders/${id}/issue`);
     },
     onSuccess: () => {
       refetch();

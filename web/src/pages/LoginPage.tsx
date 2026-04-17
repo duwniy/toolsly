@@ -4,9 +4,9 @@ import { useAuth } from '../context/AuthContext';
 import apiClient from '../api/apiClient';
 
 const QUICK_USERS = [
-  { name: 'Иван (Staff Central)', email: 'staff_central@toolsly.com', pass: 'password123', role: 'STAFF' },
-  { name: 'Елена (Staff North)', email: 'staff_north@toolsly.com', pass: 'password123', role: 'STAFF' },
-  { name: 'Покупатель (Client)', email: 'client_verified@mail.com', pass: 'password123', role: 'RENTER' },
+  { name: 'Иван Сотрудников (Staff)', email: 'staff_central@toolsly.com', pass: 'password123', role: 'STAFF' },
+  { name: 'Мария Клиентова (Verified Renter)', email: 'verified_renter@mail.com', pass: 'password123', role: 'RENTER' },
+  { name: 'Петр Новичков (New Renter)', email: 'unverified_renter@mail.com', pass: 'password123', role: 'RENTER' },
 ];
 
 export const LoginPage: React.FC = () => {
@@ -27,13 +27,19 @@ export const LoginPage: React.FC = () => {
 
     try {
       const response = await apiClient.post('/api/auth/login', { email: mail, password: pass });
+      const { role } = response.data;
       login(response.data.token, {
         userId: response.data.userId,
         email: response.data.email,
         role: response.data.role,
         branchId: response.data.branchId,
       });
-      navigate('/');
+
+      if (role === 'RENTER') {
+        navigate('/catalog');
+      } else {
+        navigate('/');
+      }
     } catch (err: any) {
       setError(err.response?.data?.message || 'Login failed');
     } finally {
