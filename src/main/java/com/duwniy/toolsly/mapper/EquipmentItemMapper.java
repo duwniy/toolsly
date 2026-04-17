@@ -12,5 +12,7 @@ public interface EquipmentItemMapper {
     @Mapping(target = "modelName", source = "model.name")
     @Mapping(target = "branchId", source = "branch.id")
     @Mapping(target = "branchName", source = "branch.name")
+    @Mapping(target = "categoryName", source = "model.category.name")
+    @Mapping(target = "dailyRate", source = "model.baseDailyPrice")
     EquipmentItemResponse toResponse(EquipmentItem entity);
 }

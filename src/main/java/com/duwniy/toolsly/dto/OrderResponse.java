@@ -15,12 +15,15 @@ public class OrderResponse {
     private UUID renterId;
     private String renterEmail;
     private UUID staffId;
+    private String staffEmail;
     private OrderStatus status;
     private BigDecimal totalPrice;
     private OffsetDateTime plannedEndDate;
     private OffsetDateTime actualEndDate;
     private UUID branchStartId;
     private String branchStartName;
+    private UUID branchEndId;
+    private String branchEndName;
     private List<OrderItemSummary> items;
 
     @Data

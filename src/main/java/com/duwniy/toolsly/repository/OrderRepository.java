@@ -13,4 +13,6 @@ public interface OrderRepository extends JpaRepository<Order, UUID> {
     @EntityGraph(attributePaths = {"renter", "staff", "branchStart", "items", "items.model"})
     @Query("select o from Order o where o.id = :id")
     Optional<Order> findDetailedById(@Param("id") UUID id);
+
+    java.util.List<Order> findByItemsContainingAndStatus(com.duwniy.toolsly.entity.EquipmentItem item, com.duwniy.toolsly.entity.OrderStatus status);
 }

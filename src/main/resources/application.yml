@@ -13,10 +13,10 @@ spring:
   jpa:
     hibernate:
       ddl-auto: validate
-    show-sql: true
+    show-sql: false
     properties:
       hibernate:
-        format_sql: true
+        format_sql: false
         jdbc:
           batch_size: 25
   flyway:
@@ -30,10 +30,12 @@ application:
       expiration: 86400000 # 1 day
 
 server:
-  port: 8080
+  port: ${PORT:8080}
 
 logging:
   level:
-    org.springframework.security: DEBUG
-    org.hibernate.SQL: DEBUG
-    com.duwniy.toolsly: DEBUG
+    org.springframework.security: INFO
+    org.hibernate.SQL: ERROR
+    org.hibernate.type.descriptor.sql.BasicBinder: ERROR
+    com.duwniy.toolsly: INFO
+    root: INFO

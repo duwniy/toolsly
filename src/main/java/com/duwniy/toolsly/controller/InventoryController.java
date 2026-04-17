@@ -3,14 +3,17 @@ package com.duwniy.toolsly.controller;
 import com.duwniy.toolsly.dto.EquipmentItemResponse;
 import com.duwniy.toolsly.entity.Branch;
 import com.duwniy.toolsly.entity.EquipmentItem;
+import com.duwniy.toolsly.entity.Role;
 import com.duwniy.toolsly.mapper.EquipmentItemMapper;
 import com.duwniy.toolsly.repository.BranchRepository;
 import com.duwniy.toolsly.repository.EquipmentItemRepository;
+import com.duwniy.toolsly.security.ToolslyUserPrincipal;
 import com.duwniy.toolsly.service.InventoryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -29,10 +32,19 @@ public class InventoryController {
 
     @GetMapping("/items")
     @Operation(summary = "List equipment items", description = "Filter by branch or status")
-    public ResponseEntity<List<EquipmentItemResponse>> getAllItems(@RequestParam(required = false) UUID branchId) {
+    public ResponseEntity<List<EquipmentItemResponse>> getAllItems(
+            @AuthenticationPrincipal ToolslyUserPrincipal principal,
+            @RequestParam(required = false) UUID branchId
+    ) {
         List<EquipmentItem> items;
-        if (branchId != null) {
-            items = itemRepository.findByBranchId(branchId);
+        UUID effectiveBranchId = branchId;
+
+        if (principal != null && principal.getRole() == Role.STAFF) {
+            effectiveBranchId = principal.getBranchId();
+        }
+
+        if (effectiveBranchId != null) {
+            items = itemRepository.findByBranchId(effectiveBranchId);
         } else {
             items = itemRepository.findAll();
         }

@@ -27,7 +27,15 @@ Implemented via `SecurityConfig` (Spring Security):
 ## Branch Insulation
 Branch data is isolated at two levels:
 1. **API Parameterization**: Controllers accept `branchId` (from the token or explicit param).
-2. **Backend Logic**: Repositories and Services (e.g., `InventoryService`, `ReportingService`) use `branchId` to filter SQL results, ensuring a user from Branch A cannot see items from Branch B.
+2. **Backend Logic**: Repositories and Services (e.g., `InventoryService`, `ReportingService`) use `branchId` to filter SQL results.
+3. **Role-Based Access**:
+    - **STAFF**: Strictly limited to their assigned `branch_id`.
+    - **ADMIN / RENTER**: Can access data across all branches if `branch_id` is null (Global Catalog).
+
+## Navigation & Redirection
+Post-login redirection is handled based on roles:
+- `STAFF / ADMIN` -> `Dashboard` (Focus on operations and metrics).
+- `RENTER` -> `Catalog` (Focus on browsing and renting equipment).
 
 ## Development Stubs (Quick Access)
 To accelerate UAT, the `LoginPage` includes "Quick Access" buttons that inject pre-defined credentials for:

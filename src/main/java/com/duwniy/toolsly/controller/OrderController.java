@@ -1,15 +1,20 @@
 package com.duwniy.toolsly.controller;
 
-import com.duwniy.toolsly.dto.OrderRequest;
-import com.duwniy.toolsly.dto.OrderResponse;
+import com.duwniy.toolsly.dto.*;
 import com.duwniy.toolsly.entity.Order;
 import com.duwniy.toolsly.mapper.OrderMapper;
 import com.duwniy.toolsly.service.OrderService;
+import com.duwniy.toolsly.service.PricingEngineService;
+import com.duwniy.toolsly.repository.EquipmentModelRepository;
+import com.duwniy.toolsly.entity.EquipmentModel;
+import com.duwniy.toolsly.exception.BusinessException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import com.duwniy.toolsly.security.ToolslyUserPrincipal;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -22,6 +27,35 @@ public class OrderController {
 
     private final OrderService orderService;
     private final OrderMapper orderMapper;
+    private final PricingEngineService pricingEngine;
+    private final EquipmentModelRepository modelRepository;
+
+    @PostMapping("/calculate-quote")
+    @Operation(summary = "Calculate order price breakdown", description = "Returns base price, markups, and discounts")
+    public ResponseEntity<PriceQuote> calculateQuote(@RequestBody QuoteRequest request) {
+        EquipmentModel model = modelRepository.findById(request.getModelId())
+                .orElseThrow(() -> new BusinessException("Model not found", "MODEL_NOT_FOUND"));
+        return ResponseEntity.ok(pricingEngine.calculatePrice(model, request.getStartDate(), request.getEndDate()));
+    }
+
+    @PostMapping("/wizard-reserve")
+    @Operation(summary = "Start rental flow from wizard", description = "Finds available item, locks it for 15m, and creates order")
+    public ResponseEntity<OrderResponse> wizardReserve(@RequestBody QuoteRequest request) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        UUID renterId = null;
+        if (auth != null && auth.getPrincipal() instanceof ToolslyUserPrincipal principal) {
+            renterId = principal.getUserId();
+        } else {
+            throw new BusinessException("User must be authenticated", "AUTH_REQUIRED");
+        }
+
+        Order saved = orderService.createOrderFromModel(
+                renterId,
+                request.getModelId(),
+                request.getBranchId(),
+                request.getEndDate());
+        return ResponseEntity.ok(orderMapper.toResponse(saved));
+    }
 
     @PostMapping
     @Operation(summary = "Create a new rental order", description = "Initializes an order in CREATED status")
@@ -45,7 +79,7 @@ public class OrderController {
     }
 
     @PostMapping("/{id}/issue")
-    @Operation(summary = "Issue tools to the renter", description = "Moves order to ISSUED status. Requires staffId in context.")
+    @Operation(summary = "Issue tools to the renter", description = "Moves order to ISSUED status. Requires staffId.")
     public ResponseEntity<Void> issueOrder(@PathVariable UUID id, @RequestParam UUID staffId) {
         orderService.issueOrder(id, staffId);
         return ResponseEntity.ok().build();
@@ -53,7 +87,7 @@ public class OrderController {
 
     @PostMapping("/{id}/return")
     @Operation(summary = "Return tools to a branch", description = "Moves order to RETURNED status and sets actual end date")
-    public ResponseEntity<Void> returnOrder(@PathVariable UUID id, @RequestBody com.duwniy.toolsly.dto.ReturnRequest request) {
+    public ResponseEntity<Void> returnOrder(@PathVariable UUID id, @RequestBody ReturnRequest request) {
         orderService.returnOrder(id, request);
         return ResponseEntity.ok().build();
     }

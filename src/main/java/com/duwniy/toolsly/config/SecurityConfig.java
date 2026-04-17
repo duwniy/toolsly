@@ -4,6 +4,7 @@ import com.duwniy.toolsly.dto.ErrorResponse;
 import com.duwniy.toolsly.security.JwtAuthenticationFilter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
@@ -32,6 +33,9 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthFilter;
     private final AuthenticationProvider authenticationProvider;
 
+    @Value("${ALLOWED_ORIGINS:http://localhost:5173}")
+    private String allowedOrigins;
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
@@ -43,7 +47,7 @@ public class SecurityConfig {
                                 "/swagger-ui/**"
                         ).permitAll()
                         .requestMatchers("/api/reporting/**").hasAnyRole("STAFF", "ADMIN")
-                        .requestMatchers("/api/inventory/**").hasAnyRole("STAFF", "ADMIN")
+                        .requestMatchers("/api/inventory/**").hasAnyRole("STAFF", "ADMIN", "RENTER")
                         .requestMatchers("/api/orders").hasRole("RENTER")
                         .requestMatchers("/api/orders/*/reserve").hasRole("STAFF")
                         .requestMatchers("/api/orders/*/issue").hasRole("STAFF")
@@ -82,7 +86,11 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:5173"));
+        if (allowedOrigins != null && !allowedOrigins.isEmpty()) {
+            configuration.setAllowedOrigins(java.util.Arrays.asList(allowedOrigins.split(",")));
+        } else {
+            configuration.setAllowedOrigins(List.of("http://localhost:5173"));
+        }
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "Cache-Control"));
         configuration.setAllowCredentials(true);
@@ -97,6 +105,8 @@ public class SecurityConfig {
         response.setStatus(status.value());
         response.setContentType("application/json");
         ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule());
+        mapper.disable(com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
         response.getWriter().write(mapper.writeValueAsString(error));
     }
 }

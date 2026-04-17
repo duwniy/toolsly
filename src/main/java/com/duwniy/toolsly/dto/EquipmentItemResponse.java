@@ -14,6 +14,8 @@ public class EquipmentItemResponse {
     private String modelName;
     private UUID branchId;
     private String branchName;
+    private String categoryName;
+    private java.math.BigDecimal dailyRate;
     private String serialNumber;
     private ItemStatus status;
     private Condition condition;
