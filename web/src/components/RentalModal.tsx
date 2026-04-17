@@ -146,14 +146,14 @@ export default function RentalModal({ isOpen, onClose, item }: RentalModalProps)
                 
                 {quote.markupAmount > 0 && (
                   <div className="flex justify-between text-sm text-rose-500">
-                    <span className="flex items-center gap-1.5">Markup <Info className="w-3.5 h-3.5" title={quote.markupReasons.join(', ')} /></span>
+                    <span title={quote.markupReasons.join(', ')} className="cursor-help"><Info className="w-3.5 h-3.5" /></span>
                     <span className="font-bold">+ RUB {quote.markupAmount.toLocaleString()}</span>
                   </div>
                 )}
 
                 {quote.discountAmount > 0 && (
                   <div className="flex justify-between text-sm text-emerald-500">
-                    <span className="flex items-center gap-1.5">Discount <Info className="w-3.5 h-3.5" title={quote.discountReasons.join(', ')} /></span>
+                    <span title={quote.discountReasons.join(', ')} className="cursor-help"><Info className="w-3.5 h-3.5" /></span>
                     <span className="font-bold">- RUB {quote.discountAmount.toLocaleString()}</span>
                   </div>
                 )}
