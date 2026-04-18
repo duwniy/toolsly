@@ -20,7 +20,7 @@ export default function CatalogPage() {
   const [selectedBranch, setSelectedBranch] = useState('');
   const [selectedItem, setSelectedItem] = useState<EquipmentItem | null>(null);
 
-  const { data: items, isLoading } = useQuery<EquipmentItem[]>({
+  const { data: items, isLoading, isError } = useQuery<EquipmentItem[]>({
     queryKey: ['inventory-items'],
     queryFn: async () => {
       const { data } = await apiClient.get('/api/inventory/items');
@@ -77,7 +77,15 @@ export default function CatalogPage() {
         </div>
       </div>
 
-      {isLoading ? (
+      {isError ? (
+        <div className="text-center py-20 bg-red-50 rounded-2xl border border-dashed border-red-200">
+          <div className="mx-auto w-14 h-14 bg-red-100 rounded-full flex items-center justify-center mb-4">
+            <Search className="w-6 h-6 text-red-300" />
+          </div>
+          <h2 className="text-lg font-semibold tracking-tight text-red-900">Ошибка загрузки данных</h2>
+          <p className="text-red-500 text-sm">Не удалось получить список оборудования. Попробуйте обновить страницу.</p>
+        </div>
+      ) : isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[1, 2, 3, 4, 5, 6].map(i => (
             <div key={i} className="h-64 bg-neutral-100 animate-pulse rounded-2xl" />

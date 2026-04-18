@@ -38,6 +38,7 @@ const ConditionBadge = ({ condition }: { condition: string }) => {
   const styles: any = {
     NEW: "bg-neutral-900 text-white",
     USED: "bg-neutral-200 text-neutral-700",
+    WORN: "bg-amber-100 text-amber-700 border border-amber-200",
     DAMAGED: "bg-neutral-100 text-neutral-500"
   };
   return (
@@ -183,7 +184,7 @@ export default function ReturnsPage() {
                        <div>
                           <p className="text-xs text-neutral-400 mb-2">Return Condition</p>
                           <div className="flex gap-1.5">
-                             {['NEW', 'USED', 'DAMAGED'].map(c => (
+                             {['NEW', 'USED', 'WORN', 'DAMAGED'].map(c => (
                                <button
                                  key={c}
                                  type="button"

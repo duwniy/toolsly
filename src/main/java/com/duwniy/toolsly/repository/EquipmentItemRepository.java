@@ -15,6 +15,12 @@ public interface EquipmentItemRepository extends JpaRepository<EquipmentItem, UU
     long countByBranch(Branch branch);
     List<EquipmentItem> findByBranchId(UUID branchId);
 
+    @Query("SELECT i FROM EquipmentItem i LEFT JOIN FETCH i.model m LEFT JOIN FETCH i.branch LEFT JOIN FETCH m.category")
+    List<EquipmentItem> findAllWithDetails();
+
+    @Query("SELECT i FROM EquipmentItem i LEFT JOIN FETCH i.model m LEFT JOIN FETCH i.branch b LEFT JOIN FETCH m.category WHERE b.id = :branchId")
+    List<EquipmentItem> findByBranchIdWithDetails(@Param("branchId") UUID branchId);
+
     @Query("SELECT i FROM EquipmentItem i WHERE i.model.id = :modelId AND i.branch.id = :branchId AND i.status = :status")
     List<EquipmentItem> findFirstByModelIdAndBranchIdAndStatus(
             @Param("modelId") UUID modelId,

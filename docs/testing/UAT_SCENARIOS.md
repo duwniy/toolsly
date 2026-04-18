@@ -1,30 +1,40 @@
-# UAT Scenarios for Milestone 6
+# UAT Test Scenarios — Toolsly Platform
 
-This document outlines the key business logic test cases to be performed during the User Acceptance Testing (UAT).
+## Test Accounts (V11 Migration)
 
-## Scenario 1: High-Value Equipment Verification
-**Goal**: Verify that unverified users cannot rent equipment with market value > 5000 RUB.
-- **Actor**: `client_new@mail.com` (not verified)
-- **Item**: `Перфоратор Makita` (MK-001, Market Value: 15,000 RUB)
-- **Action**: Create and attempt to issue an order.
-- **Expected Result**: System throws `BusinessException` with code `VERIFICATION_REQUIRED`.
+| Persona | Email | Role | Verified | Branch |
+|---|---|---|---|---|
+| **Алексей Смирнов** | `alexey.smirnov@toolsly.com` | STAFF | ✅ | Склад Сокольники (Центр) |
+| **Игорь Волков** | `igor.volkov@mail.com` | RENTER | ✅ | — |
 
-## Scenario 2: Branch Storage Capacity Limit
-**Goal**: Verify that a branch cannot accept items exceeding its `storage_capacity`.
-- **Actor**: `staff_north@toolsly.com`
-- **Context**: "Северный терминал" has a capacity of **2**.
-- **Action**: Return an order containing a 3rd item to this branch.
-- **Expected Result**: System throws `BusinessException` with code `CAPACITY_EXCEEDED`.
+> Password for both: `password123`
 
-## Scenario 3: Bulk Discount Calculation
-**Goal**: Verify that the Pricing Engine correctly applies a 10% discount for long-term rentals.
-- **Actor**: Any RENTER.
-- **Rental Duration**: 10 days.
-- **Action**: Use the pricing engine or create a reservation.
-- **Expected Result**: Total price should be `(Daily Rate * 10) * 0.9`. Note that weekend markups (+20%) still apply to specific days before the discount.
+## Scenario 1: Full Rental Cycle (Happy Path)
 
-## Scenario 4: Staff-Branch Data Insulation
-**Goal**: Verify that STAFF users are correctly linked to their branches.
-- **Actor**: `staff_north@toolsly.com`
-- **Action**: Access the branch-specific dashboard.
-- **Expected Result**: Only items and analytics for "Северный терминал" are displayed.
+1. Login as **Игорь Волков** (RENTER) → redirected to `/catalog`.
+2. Browse available equipment models.
+3. Create a new order selecting an available item from Сокольники.
+4. Login as **Алексей Смирнов** (STAFF) → redirected to Dashboard.
+5. Issue the order — verify renter is verified → success.
+6. Return the order — confirm condition assessment and penalty calculation (if applicable).
+7. Verify order status transitions: CREATED → ISSUED → RETURNED → CLOSED.
+
+## Scenario 2: Dashboard KPI Validation
+
+1. Login as **Алексей Смирнов** (STAFF).
+2. Verify Dashboard shows Revenue charts populated from 10 historical orders (March–April).
+3. Verify Popular Models widget shows tool usage statistics.
+
+## Scenario 3: Storage Capacity Limit
+
+1. The branch "Пункт выдачи Мурино (Север)" has `storage_capacity = 3` and currently holds 2 items.
+2. Attempt to transfer a 4th item to Мурино — system should enforce capacity limit.
+
+## Additional Accounts (Available but not on Quick Access)
+
+| Persona | Email | Role | Verified | Purpose |
+|---|---|---|---|---|
+| Марина Кузнецова | `marina.k@toolsly.com` | STAFF | ✅ | North branch staff |
+| Дмитрий Назаров | `dmitry.nazarov@mail.com` | RENTER | ❌ | Test ISSUE denial for unverified renter |
+| Ольга Степанова | `olga.stepanova@mail.com` | RENTER | ✅ | Additional verified renter |
+| Admin | `admin@toolsly.com` | ADMIN | ✅ | System administration |

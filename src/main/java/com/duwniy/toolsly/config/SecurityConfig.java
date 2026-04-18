@@ -44,6 +44,7 @@ public class SecurityConfig {
                                 "/api/health"
                         ).permitAll()
                         .requestMatchers("/api/reporting/**").hasAnyRole("STAFF", "ADMIN")
+                        .requestMatchers("/api/users/**").authenticated()
                         .requestMatchers("/api/inventory/**").hasAnyRole("STAFF", "ADMIN", "RENTER")
                         .requestMatchers("/api/orders").hasRole("RENTER")
                         .requestMatchers("/api/orders/*/reserve").hasRole("STAFF")

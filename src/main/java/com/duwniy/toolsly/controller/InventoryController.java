@@ -23,6 +23,7 @@ import java.util.UUID;
 @RequestMapping("/api/inventory")
 @RequiredArgsConstructor
 @Tag(name = "Inventory", description = "Endpoints for managing tools, branches, and availability")
+@lombok.extern.slf4j.Slf4j
 public class InventoryController {
 
     private final InventoryService inventoryService;
@@ -32,23 +33,36 @@ public class InventoryController {
 
     @GetMapping("/items")
     @Operation(summary = "List equipment items", description = "Filter by branch or status")
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public ResponseEntity<List<EquipmentItemResponse>> getAllItems(
             @AuthenticationPrincipal ToolslyUserPrincipal principal,
             @RequestParam(required = false) UUID branchId
     ) {
-        List<EquipmentItem> items;
-        UUID effectiveBranchId = branchId;
+        try {
+            List<EquipmentItem> items;
+            UUID effectiveBranchId = branchId;
 
-        if (principal != null && principal.getRole() == Role.STAFF) {
-            effectiveBranchId = principal.getBranchId();
-        }
+            // For STAFF with an assigned branch, scope results to their branch
+            if (principal != null && principal.getRole() == Role.STAFF && principal.getBranchId() != null) {
+                effectiveBranchId = principal.getBranchId();
+            }
 
-        if (effectiveBranchId != null) {
-            items = itemRepository.findByBranchId(effectiveBranchId);
-        } else {
-            items = itemRepository.findAll();
+            log.info("Fetching items. Principal: {}, Effective Branch: {}", 
+                principal != null ? principal.getUsername() : "anonymous", 
+                effectiveBranchId);
+
+            // If we have a branch filter, apply it; otherwise return all items
+            // Using WithDetails queries with LEFT JOIN to eagerly and safely load relationships
+            if (effectiveBranchId != null) {
+                items = itemRepository.findByBranchIdWithDetails(effectiveBranchId);
+            } else {
+                items = itemRepository.findAllWithDetails();
+            }
+            return ResponseEntity.ok(items.stream().map(itemMapper::toResponse).toList());
+        } catch (Exception e) {
+            log.error("Error fetching inventory items: {}", e.getMessage(), e);
+            throw e;
         }
-        return ResponseEntity.ok(items.stream().map(itemMapper::toResponse).toList());
     }
 
     @GetMapping("/branches")

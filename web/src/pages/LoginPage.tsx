@@ -4,9 +4,8 @@ import { useAuth } from '../context/AuthContext';
 import apiClient from '../api/apiClient';
 
 const QUICK_USERS = [
-  { name: 'Ivan Sotroudnikov', email: 'staff_central@toolsly.com', pass: 'password123', role: 'STAFF', desc: 'Staff access' },
-  { name: 'Maria Klientova', email: 'verified_renter@mail.com', pass: 'password123', role: 'RENTER', desc: 'Verified renter' },
-  { name: 'Petr Novichkov', email: 'unverified_renter@mail.com', pass: 'password123', role: 'RENTER', desc: 'New renter' },
+  { name: 'Алексей Смирнов', email: 'alexey.smirnov@toolsly.com', pass: 'password123', role: 'STAFF', desc: 'Сотрудник — Центр' },
+  { name: 'Игорь Волков', email: 'igor.volkov@mail.com', pass: 'password123', role: 'RENTER', desc: 'Клиент — Верифицирован' },
 ];
 
 export const LoginPage: React.FC = () => {

@@ -79,14 +79,14 @@ public class OrderController {
     }
 
     @PostMapping("/{id}/issue")
-    @Operation(summary = "Issue tools to the renter", description = "Moves order to ISSUED status. Requires staffId.")
+    @Operation(summary = "Выдача инструментов клиенту (требуется верификация для дорогих позиций)", description = "Moves order to ISSUED status. Requires staffId.")
     public ResponseEntity<Void> issueOrder(@PathVariable UUID id, @RequestParam UUID staffId) {
         orderService.issueOrder(id, staffId);
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/{id}/return")
-    @Operation(summary = "Return tools to a branch", description = "Moves order to RETURNED status and sets actual end date")
+    @Operation(summary = "Прием инструментов и автоматический расчет штрафов за повреждения", description = "Moves order to RETURNED status and sets actual end date")
     public ResponseEntity<Void> returnOrder(@PathVariable UUID id, @RequestBody ReturnRequest request) {
         orderService.returnOrder(id, request);
         return ResponseEntity.ok().build();
