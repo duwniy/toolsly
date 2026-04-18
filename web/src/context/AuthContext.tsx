@@ -2,12 +2,12 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import apiClient from '../api/apiClient';
 
 interface User {
-  userId: string;
+  id: string;
   email: string;
   role: 'ADMIN' | 'STAFF' | 'RENTER';
   branchId: string | null;
   branchName: string | null;
-  verified: boolean;
+  isVerified: boolean;
 }
 
 interface AuthContextType {
@@ -29,12 +29,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const { data } = await apiClient.get('/api/users/me');
       const enrichedUser: User = {
-        userId: data.userId,
+        id: data.userId,
         email: data.email,
         role: data.role,
         branchId: data.branchId,
         branchName: data.branchName,
-        verified: data.verified,
+        isVerified: data.verified,
       };
       setUser(enrichedUser);
       localStorage.setItem('user', JSON.stringify(enrichedUser));
@@ -65,12 +65,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const { data } = await apiClient.get('/api/users/me');
       const enriched: User = {
-        userId: data.userId,
+        id: data.userId,
         email: data.email,
         role: data.role,
         branchId: data.branchId,
         branchName: data.branchName,
-        verified: data.verified,
+        isVerified: data.verified,
       };
       setUser(enriched);
       localStorage.setItem('user', JSON.stringify(enriched));

@@ -92,7 +92,7 @@ function Layout({ children }: { children: React.ReactNode }) {
           <button onClick={() => navigate('/profile')} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
             <div className="text-right">
               <p className="text-sm font-medium leading-none">{user?.email}</p>
-              <p className="text-xs text-neutral-400 mt-0.5">{user?.branchName || 'Global'}{user?.role === 'RENTER' && (user?.verified ? ' · ✓ Verified' : ' · ✗ Not Verified')}</p>
+              <p className="text-xs text-neutral-400 mt-0.5">{user?.branchName || 'Global'}{user?.role === 'RENTER' && (user?.isVerified ? ' · ✓ Verified' : ' · ✗ Not Verified')}</p>
             </div>
             <div className="w-8 h-8 rounded-full bg-neutral-100 border border-neutral-200" />
           </button>

@@ -28,10 +28,12 @@ export const LoginPage: React.FC = () => {
       const response = await apiClient.post('/api/auth/login', { email: mail, password: pass });
       const { role } = response.data;
       login(response.data.token, {
-        userId: response.data.userId,
+        id: response.data.userId,
         email: response.data.email,
         role: response.data.role,
         branchId: response.data.branchId,
+        branchName: response.data.branchName || null,
+        isVerified: response.data.verified || false
       });
 
       if (role === 'RENTER') {

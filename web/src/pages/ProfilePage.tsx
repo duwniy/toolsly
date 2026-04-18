@@ -6,7 +6,7 @@ export default function ProfilePage() {
 
   if (!user) return null;
 
-  const isVerified = user.verified;
+  const isVerified = user.isVerified;
 
   return (
     <div className="max-w-2xl mx-auto space-y-8">

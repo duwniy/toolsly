@@ -29,7 +29,7 @@ export default function IssueToolPage() {
 
   const issueMutation = useMutation({
     mutationFn: async (id: string) => {
-      if (!user?.userId) return;
+      if (!user?.id) return;
       await apiClient.post(`/api/orders/${id}/issue`);
     },
     onSuccess: () => {
