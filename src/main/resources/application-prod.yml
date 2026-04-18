@@ -28,8 +28,14 @@ application:
     jwt:
       secret-key: ${APPLICATION_SECURITY_JWT_SECRET_KEY}
 
+server:
+  port: ${PORT:10000}
+
 logging:
   level:
     root: INFO
     com.duwniy.toolsly: INFO
     org.hibernate.SQL: ERROR
+    com.zaxxer.hikari: DEBUG
+    org.flywaydb.core: DEBUG
+    org.springframework.jdbc: DEBUG
