@@ -1,7 +1,15 @@
 import axios from 'axios';
 
+// Resolve base URL and aggressively avoid double /api
+let baseApiUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:8080';
+if (baseApiUrl.endsWith('/api/')) {
+  baseApiUrl = baseApiUrl.slice(0, -5);
+} else if (baseApiUrl.endsWith('/api')) {
+  baseApiUrl = baseApiUrl.slice(0, -4);
+}
+
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8080',
+  baseURL: baseApiUrl,
   headers: {
     'Content-Type': 'application/json',
   },
