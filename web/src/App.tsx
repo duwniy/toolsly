@@ -10,10 +10,10 @@ import { LoginPage } from './pages/LoginPage';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) => 
-  `flex items-center gap-3 px-4 py-3 text-sm transition-all duration-200 rounded-xl ${
+  `flex items-center gap-3 px-4 py-2.5 text-sm transition-all duration-200 rounded-lg ${
     isActive 
-      ? "bg-black text-white shadow-lg shadow-black/10 font-bold" 
-      : "font-medium hover:bg-white hover:shadow-sm border border-slate-50 text-slate-600"
+      ? "bg-black text-white font-medium" 
+      : "text-neutral-600 hover:bg-neutral-100"
   }`;
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -25,18 +25,18 @@ function Layout({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuth();
   
   return (
-    <div className="min-h-screen bg-white text-black flex">
+    <div className="min-h-screen bg-neutral-50 text-black flex">
       {/* Sidebar */}
-      <aside className="w-72 border-r bg-slate-50 flex flex-col p-4 space-y-8">
-        <div className="flex items-center px-2 gap-2 font-bold text-2xl tracking-tighter">
-          <div className="w-9 h-9 bg-black rounded-xl flex items-center justify-center text-white shadow-lg shadow-black/20">
+      <aside className="w-64 bg-white border-r border-neutral-100 flex flex-col p-4 space-y-6">
+        <div className="flex items-center px-2 gap-2.5 font-semibold text-xl tracking-tight">
+          <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center text-white text-sm">
             T
           </div>
-          TOOLSLY
+          Toolsly
         </div>
         
         <nav className="flex-1 space-y-1">
-          <p className="px-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Menu</p>
+          <p className="px-3 text-xs font-medium text-neutral-400 uppercase tracking-wider mb-2">Menu</p>
           {(user?.role === 'STAFF' || user?.role === 'ADMIN') && (
             <NavLink to="/" className={navLinkClass}>
               <LayoutGrid className="w-4 h-4" /> Dashboard
@@ -47,8 +47,8 @@ function Layout({ children }: { children: React.ReactNode }) {
             <PackageCheck className="w-4 h-4" /> Catalog
           </NavLink>
           
-          <div className="pt-6">
-            <p className="px-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Operations</p>
+          <div className="pt-4">
+            <p className="px-3 text-xs font-medium text-neutral-400 uppercase tracking-wider mb-2">Operations</p>
             <div className="space-y-1">
               {user?.role === 'STAFF' && (
                 <NavLink to="/issue" className={navLinkClass}>
@@ -64,35 +64,36 @@ function Layout({ children }: { children: React.ReactNode }) {
           </div>
         </nav>
 
-        <div className="p-4 border-t bg-white space-y-1">
-          <div className="flex items-center gap-3 px-4 py-2 text-sm font-medium text-slate-600 truncate">
-            <User className="w-4 h-4" /> {user?.email}
+        <div className="pt-4 border-t border-neutral-100 space-y-1">
+          <div className="flex items-center gap-3 px-3 py-2 text-sm text-neutral-600 truncate">
+            <User className="w-4 h-4" /> 
+            <span className="truncate">{user?.email}</span>
           </div>
           <button 
             onClick={logout}
-            className="w-full flex items-center gap-3 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-md transition-colors"
+            className="w-full flex items-center gap-3 px-3 py-2 text-sm text-neutral-500 hover:text-black hover:bg-neutral-50 rounded-lg transition-colors"
           >
-            <LogOut className="w-4 h-4" /> Logout
+            <LogOut className="w-4 h-4" /> Sign out
           </button>
         </div>
       </aside>
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col h-screen overflow-hidden">
-        <header className="h-16 border-b flex items-center px-8 justify-between bg-white backdrop-blur-sm z-10">
-          <div className="font-medium text-slate-500">
-            {user?.role} Portal / <span className="text-black font-bold uppercase tracking-tight italic">Operations</span>
+        <header className="h-14 border-b border-neutral-100 flex items-center px-6 justify-between bg-white">
+          <div className="text-sm text-neutral-500">
+            <span className="text-neutral-400">{user?.role}</span> / <span className="text-black font-medium">Operations</span>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <div className="text-right">
-              <p className="text-xs font-bold leading-none">{user?.email}</p>
-              <p className="text-[10px] text-slate-400 font-medium tracking-wide">BRANCH: {user?.branchId || 'GLOBAL'}</p>
+              <p className="text-sm font-medium leading-none">{user?.email}</p>
+              <p className="text-xs text-neutral-400 mt-0.5">Branch: {user?.branchId || 'Global'}</p>
             </div>
-            <div className="w-9 h-9 rounded-full bg-slate-100 border border-slate-200" />
+            <div className="w-8 h-8 rounded-full bg-neutral-100 border border-neutral-200" />
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-12 bg-[#F9FAFB]">
+        <main className="flex-1 overflow-y-auto p-8 bg-neutral-50">
           {children}
         </main>
       </div>
