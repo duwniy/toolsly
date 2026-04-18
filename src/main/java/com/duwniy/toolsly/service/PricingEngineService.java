@@ -2,6 +2,7 @@ package com.duwniy.toolsly.service;
 
 import com.duwniy.toolsly.dto.PriceQuote;
 import com.duwniy.toolsly.entity.EquipmentModel;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -12,9 +13,11 @@ import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 
 @Service
+@Slf4j
 public class PricingEngineService {
 
     public PriceQuote calculatePrice(EquipmentModel model, OffsetDateTime start, OffsetDateTime end) {
+        log.info("Calculating price for model={}, from={} to={}", model.getName(), start, end);
         long days = ChronoUnit.DAYS.between(start, end);
         if (days <= 0) days = 1;
 
@@ -41,12 +44,11 @@ public class PricingEngineService {
 
         BigDecimal total = priceBeforeDiscount.subtract(discountSum);
 
-        return PriceQuote.builder()
-                .basePrice(baseSum)
-                .weekendMarkup(markupSum)
-                .durationDiscount(discountSum)
+        PriceQuote quote = PriceQuote.builder()
                 .totalPrice(total)
                 .days(days)
                 .build();
+        log.info("Price calculation result: total={}, days={}, discount={}", total, days, discountSum);
+        return quote;
     }
 }

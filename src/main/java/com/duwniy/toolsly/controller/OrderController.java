@@ -17,12 +17,15 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/orders")
 @RequiredArgsConstructor
 @Tag(name = "Orders", description = "Endpoints for tool rental order lifecycle management")
+@Slf4j
 public class OrderController {
 
     private final OrderService orderService;
@@ -33,6 +36,7 @@ public class OrderController {
     @PostMapping("/calculate-quote")
     @Operation(summary = "Calculate order price breakdown", description = "Returns base price, markups, and discounts")
     public ResponseEntity<PriceQuote> calculateQuote(@RequestBody QuoteRequest request) {
+        log.info("REST request to calculate order price quote for model: {}", request.getModelId());
         EquipmentModel model = modelRepository.findById(request.getModelId())
                 .orElseThrow(() -> new BusinessException("Model not found", "MODEL_NOT_FOUND"));
         return ResponseEntity.ok(pricingEngine.calculatePrice(model, request.getStartDate(), request.getEndDate()));
@@ -41,6 +45,7 @@ public class OrderController {
     @PostMapping("/wizard-reserve")
     @Operation(summary = "Start rental flow from wizard", description = "Finds available item, locks it for 15m, and creates order")
     public ResponseEntity<OrderResponse> wizardReserve(@RequestBody QuoteRequest request) {
+        log.info("REST request to wizard-reserve tools for model: {}, branch: {}", request.getModelId(), request.getBranchId());
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         UUID renterId = null;
         if (auth != null && auth.getPrincipal() instanceof ToolslyUserPrincipal principal) {
@@ -60,6 +65,7 @@ public class OrderController {
     @PostMapping
     @Operation(summary = "Create a new rental order", description = "Initializes an order in CREATED status")
     public ResponseEntity<OrderResponse> createOrder(@RequestBody OrderRequest request) {
+        log.info("REST request to create a new rental order");
         Order order = orderMapper.toEntity(request);
         Order saved = orderService.createOrder(order);
         return ResponseEntity.ok(orderMapper.toResponse(saved));
@@ -68,6 +74,7 @@ public class OrderController {
     @PostMapping("/{id}/reserve")
     @Operation(summary = "Reserve tools for the order", description = "Moves order to RESERVED status and applies price calculation")
     public ResponseEntity<Void> reserveOrder(@PathVariable UUID id) {
+        log.info("REST request to reserve tools for order ID: {}", id);
         orderService.reserveOrder(id);
         return ResponseEntity.ok().build();
     }
@@ -75,12 +82,14 @@ public class OrderController {
     @GetMapping("/{id}")
     @Operation(summary = "Get order details", description = "Returns an order view tailored for issue and return flows")
     public ResponseEntity<OrderResponse> getOrder(@PathVariable UUID id) {
+        log.info("REST request to get order details for ID: {}", id);
         return ResponseEntity.ok(orderService.getOrderById(id));
     }
 
     @PostMapping("/{id}/issue")
     @Operation(summary = "Выдача инструментов клиенту (требуется верификация для дорогих позиций)", description = "Moves order to ISSUED status. Requires staffId.")
     public ResponseEntity<Void> issueOrder(@PathVariable UUID id, @RequestParam UUID staffId) {
+        log.info("REST request to issue tools for order ID: {}, staff ID: {}", id, staffId);
         orderService.issueOrder(id, staffId);
         return ResponseEntity.ok().build();
     }
@@ -88,6 +97,7 @@ public class OrderController {
     @PostMapping("/{id}/return")
     @Operation(summary = "Прием инструментов и автоматический расчет штрафов за повреждения", description = "Moves order to RETURNED status and sets actual end date")
     public ResponseEntity<Void> returnOrder(@PathVariable UUID id, @RequestBody ReturnRequest request) {
+        log.info("REST request to return tools for order ID: {}", id);
         orderService.returnOrder(id, request);
         return ResponseEntity.ok().build();
     }

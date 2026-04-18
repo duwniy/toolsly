@@ -7,6 +7,7 @@ import com.duwniy.toolsly.security.ToolslyUserPrincipal;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
 @Tag(name = "Users", description = "Endpoints for user profile management")
+@Slf4j
 public class UserController {
 
     private final UserRepository userRepository;
@@ -27,6 +29,7 @@ public class UserController {
     public ResponseEntity<UserProfileResponse> getCurrentUser(
             @AuthenticationPrincipal ToolslyUserPrincipal principal
     ) {
+        log.info("REST request to get profile for user ID: {}", principal.getUserId());
         User user = userRepository.findById(principal.getUserId())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 

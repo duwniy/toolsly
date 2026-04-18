@@ -72,7 +72,9 @@ public class OrderService {
         }
 
         order.setStatus(OrderStatus.CREATED);
-        return orderRepository.save(order);
+        Order saved = orderRepository.save(order);
+        log.info("New order created: ID={}, renter={}", saved.getId(), saved.getRenter().getEmail());
+        return saved;
     }
 
     @Transactional
@@ -162,7 +164,8 @@ public class OrderService {
         ).getTotalPrice());
 
         order.setStatus(OrderStatus.RESERVED);
-        orderRepository.save(order);
+        Order saved = orderRepository.save(order);
+        log.info("Order [{}] successfully reserved for user [{}]. Total price: {}", saved.getId(), saved.getRenter().getEmail(), saved.getTotalPrice());
     }
 
     @Transactional

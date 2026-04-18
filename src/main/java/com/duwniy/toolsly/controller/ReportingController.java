@@ -7,6 +7,7 @@ import com.duwniy.toolsly.service.ReportingService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/reporting")
 @RequiredArgsConstructor
 @Tag(name = "Analytics", description = "Business intelligence and dashboard endpoints")
+@Slf4j
 public class ReportingController {
 
     private final ReportingService reportingService;
@@ -28,6 +30,7 @@ public class ReportingController {
             @AuthenticationPrincipal ToolslyUserPrincipal principal,
             @RequestParam(required = false) java.util.UUID branchId
     ) {
+        log.info("REST request to get dashboard stats. Branch filter: {}, Principal: {}", branchId, principal != null ? principal.getUsername() : "anonymous");
         java.util.UUID effectiveBranchId = branchId;
 
         if (principal != null && principal.getRole() == Role.STAFF) {
