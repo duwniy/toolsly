@@ -2,8 +2,9 @@ import { useQuery } from '@tanstack/react-query';
 import apiClient from '../api/apiClient';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
-  LineChart, Line, Cell
+  AreaChart, Area, Cell
 } from 'recharts';
+import { format, parseISO } from 'date-fns';
 import { 
   TrendingUp, Users, Package, AlertCircle, 
   ArrowUpRight, ArrowDownRight, Activity
@@ -94,7 +95,7 @@ export default function DashboardPage() {
           <p className="text-neutral-400 text-sm sm:text-base">Real-time business intelligence and asset health</p>
         </div>
         <div className="flex gap-2">
-          <div className="px-3 sm:px-4 py-2 bg-black text-white rounded-lg text-sm font-medium flex items-center gap-2">
+          <div className="px-3 sm:px-4 py-2 bg-black text-white rounded-lg text-sm font-medium flex items-center gap-2 animate-pulse">
             <Activity className="w-4 h-4" /> Live
           </div>
         </div>
@@ -142,7 +143,13 @@ export default function DashboardPage() {
           </div>
           <div className="h-[250px] sm:h-[280px] lg:h-[320px] w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={stats?.revenueTrend}>
+              <AreaChart data={stats?.revenueTrend}>
+                <defs>
+                  <linearGradient id="colorAmount" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#000" stopOpacity={0.1}/>
+                    <stop offset="95%" stopColor="#000" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f5f5f5" />
                 <XAxis 
                   dataKey="date" 
@@ -150,6 +157,9 @@ export default function DashboardPage() {
                   tickLine={false} 
                   tick={{fill: '#a3a3a3', fontSize: 11}}
                   dy={10}
+                  tickFormatter={(val) => {
+                    try { return format(parseISO(val), 'dd MMM'); } catch { return val; }
+                  }}
                 />
                 <YAxis 
                   axisLine={false} 
@@ -163,16 +173,20 @@ export default function DashboardPage() {
                     boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.05)',
                     fontSize: '13px'
                   }} 
+                  labelFormatter={(val) => {
+                    try { return format(parseISO(val as string), 'PPP'); } catch { return val; }
+                  }}
                 />
-                <Line 
+                <Area 
                   type="monotone" 
                   dataKey="amount" 
                   stroke="#000" 
                   strokeWidth={2} 
-                  dot={{ r: 3, fill: '#000', strokeWidth: 2, stroke: '#fff' }}
+                  fillOpacity={1} 
+                  fill="url(#colorAmount)"
                   activeDot={{ r: 6, fill: '#000' }}
                 />
-              </LineChart>
+              </AreaChart>
             </ResponsiveContainer>
           </div>
         </div>

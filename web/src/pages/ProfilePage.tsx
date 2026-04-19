@@ -2,6 +2,7 @@ import { useAuth } from '../context/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import apiClient from '../api/apiClient';
+import { formatDate } from '../lib/date-utils';
 import { 
   Shield, 
   Mail, 
@@ -154,7 +155,7 @@ export default function ProfilePage() {
           <ProfileRow 
             icon={<Calendar className="w-4 h-4" />} 
             label="Member Since" 
-            value={stats?.memberSince ? new Date(stats.memberSince).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : 'Recently joined'} 
+            value={stats?.memberSince ? formatDate(stats.memberSince) : 'Recently joined'} 
           />
         </div>
       </div>

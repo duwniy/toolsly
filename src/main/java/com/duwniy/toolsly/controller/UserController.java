@@ -34,6 +34,35 @@ public class UserController {
         return ResponseEntity.ok(orderService.getUserFinances(principal.getUserId()));
     }
 
+    @GetMapping("/me/stats")
+    @Operation(summary = "Get user stats", description = "Returns basic stats for the profile page")
+    public ResponseEntity<java.util.Map<String, Object>> getMyStats(
+            @AuthenticationPrincipal ToolslyUserPrincipal principal
+    ) {
+        log.info("REST request to get stats for user ID: {}", principal.getUserId());
+        java.util.Map<String, Object> stats = new java.util.HashMap<>();
+        
+        try {
+            com.duwniy.toolsly.dto.UserFinancesResponse finances = orderService.getUserFinances(principal.getUserId());
+            stats.put("totalOrders", finances.getRecentPayments() != null ? finances.getRecentPayments().size() : 0);
+            stats.put("activeOrders", 0);
+            stats.put("totalSpent", finances.getTotalSpent());
+        } catch (Exception e) {
+            log.error("Error fetching finances for stats", e);
+            stats.put("totalOrders", 0);
+            stats.put("activeOrders", 0);
+            stats.put("totalSpent", 0);
+        }
+        
+        User user = userRepository.findById(principal.getUserId()).orElse(null);
+        if (user != null && user.getCreatedAt() != null) {
+             stats.put("memberSince", user.getCreatedAt().toString());
+        } else {
+             stats.put("memberSince", java.time.OffsetDateTime.now().toString());
+        }
+        return ResponseEntity.ok(stats);
+    }
+
     @GetMapping("/me")
     @Operation(summary = "Get current user profile",
                description = "Returns full profile info extracted from JWT: email, role, verified status, and branch details")

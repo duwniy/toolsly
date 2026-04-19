@@ -119,7 +119,7 @@ public class ReportingService {
         LocalDate start = LocalDate.now().minusDays(29);
         String query = "SELECT date_trunc('day', actual_end_date) as day, COALESCE(SUM(total_price), 0) as amount " +
                 "FROM orders " +
-                "WHERE status = 'RETURNED' AND actual_end_date >= :start ";
+                "WHERE status IN ('RETURNED', 'CLOSED') AND actual_end_date >= :start ";
         if (branchId != null) {
             query += " AND branch_start_id = :branchId ";
         }

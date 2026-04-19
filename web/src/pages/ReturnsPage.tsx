@@ -16,6 +16,7 @@ import { toast } from 'sonner';
 import apiClient from '../api/apiClient';
 import { useAuth } from '../context/AuthContext';
 import ItemHistoryModal from '../components/ItemHistoryModal';
+import { formatDate } from '../lib/date-utils';
 
 interface EquipmentItem {
   id: string;
@@ -29,6 +30,7 @@ interface Order {
   renterEmail: string;
   items: EquipmentItem[];
   status: string;
+  createdAt: string;
   plannedEndDate: string;
   actualEndDate?: string;
   totalPrice: number;
@@ -353,7 +355,7 @@ export default function ReturnsPage() {
                  </div>
                  <div className="flex justify-between items-center text-xs text-neutral-500">
                    <span>{ret.renterEmail}</span>
-                   <span>{new Date(ret.actualEndDate || '').toLocaleDateString()}</span>
+                   <span>{formatDate(ret.actualEndDate || ret.createdAt || ret.plannedEndDate)}</span>
                  </div>
                  <button 
                    onClick={() => setOrderId(ret.id)}
@@ -383,8 +385,7 @@ export default function ReturnsPage() {
                     {recentReturns.map((ret) => (
                       <tr key={ret.id} className="hover:bg-neutral-50 transition-colors group">
                         <td className="px-4 lg:px-6 py-4">
-                          <p className="text-sm font-medium">{new Date(ret.actualEndDate || '').toLocaleDateString()}</p>
-                          <p className="text-[10px] text-neutral-400">{new Date(ret.actualEndDate || '').toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
+                          <p className="text-sm font-medium">{formatDate(ret.actualEndDate || ret.createdAt || ret.plannedEndDate)}</p>
                         </td>
                         <td className="px-4 lg:px-6 py-4 text-sm font-medium">{ret.renterEmail}</td>
                         <td className="px-4 lg:px-6 py-4">

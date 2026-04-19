@@ -28,6 +28,16 @@ export default function IssueToolPage() {
     enabled: !!searchId,
   });
 
+  const { data: reservedOrders, isLoading: isLoadingReserved } = useQuery({
+    queryKey: ['reserved-orders', user?.branchId],
+    queryFn: async () => {
+      if (!user?.branchId) return [];
+      const res = await apiClient.get(`/api/orders/reserved?branchId=${user.branchId}`);
+      return res.data as Order[];
+    },
+    enabled: !!user?.branchId,
+  });
+
   const issueMutation = useMutation({
     mutationFn: async (id: string) => {
       if (!user?.id) return;
@@ -74,6 +84,48 @@ export default function IssueToolPage() {
           Search
         </button>
       </form>
+
+      {reservedOrders && reservedOrders.length > 0 && !searchId && (
+        <div className="space-y-3">
+          <p className="text-xs font-semibold text-neutral-400 uppercase tracking-widest flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+            Recent Reservations in this Branch
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {reservedOrders.map((ro) => (
+              <div 
+                key={ro.id} 
+                className="p-4 bg-white border border-neutral-200 rounded-xl hover:border-black transition-all cursor-pointer group flex flex-col justify-between min-h-[100px] shadow-sm hover:shadow-md" 
+                onClick={() => {
+                  setOrderId(ro.id);
+                  setSearchId(ro.id);
+                }}
+              >
+                <div>
+                  <div className="flex justify-between items-start mb-2">
+                    <p className="text-xs font-mono text-neutral-500">{ro.id.substring(0, 8)}...</p>
+                    <span className="px-2.5 py-0.5 bg-blue-50 text-blue-700 rounded-md text-[10px] font-bold uppercase tracking-wider border border-blue-100">
+                      Reserved
+                    </span>
+                  </div>
+                  <p className="text-sm font-medium truncate text-neutral-800">{ro.renterEmail}</p>
+                </div>
+                <div className="flex justify-between items-end mt-3 border-t border-neutral-50 pt-3">
+                  <span className="text-sm font-semibold tracking-tight">₽{ro.totalPrice.toLocaleString()}</span>
+                  <span className="text-blue-600 text-sm font-medium group-hover:translate-x-0.5 transition-transform">Issue &rarr;</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {isLoadingReserved && !searchId && (
+        <div className="flex gap-4 opacity-50 py-4">
+          <div className="animate-pulse w-full h-24 bg-neutral-100 rounded-xl" />
+          <div className="animate-pulse w-full h-24 bg-neutral-100 rounded-xl hidden sm:block" />
+        </div>
+      )}
 
       {isLoading && (
         <div className="text-center py-12 text-neutral-400">Searching order...</div>

@@ -166,4 +166,19 @@ public class OrderController {
                 .map(orderMapper::toResponse)
                 .toList());
     }
+
+    @GetMapping("/reserved")
+    @Operation(summary = "Get active reservations", description = "Returns active RESERVED orders for the branch")
+    public ResponseEntity<java.util.List<OrderResponse>> getReservedOrders(
+            @RequestParam UUID branchId
+    ) {
+        log.info("REST request to get active reserved orders for branch: {}", branchId);
+        java.util.List<com.duwniy.toolsly.entity.OrderStatus> reservedStatuses = java.util.List.of(
+                com.duwniy.toolsly.entity.OrderStatus.RESERVED
+        );
+        return ResponseEntity.ok(orderRepository.findTop20ByBranchStartIdAndStatusInOrderByCreatedAtDesc(branchId, reservedStatuses)
+                .stream()
+                .map(orderMapper::toResponse)
+                .toList());
+    }
 }

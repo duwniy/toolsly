@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Clock, Loader2, Package } from 'lucide-react';
 import apiClient from '../api/apiClient';
 import { toast } from 'sonner';
+import { formatDate } from '../lib/date-utils';
 
 interface Order {
   id: string;
@@ -14,6 +15,7 @@ interface Order {
   totalPrice: number;
   currentAccruedPrice: number | null;
   plannedEndDate: string;
+  actualEndDate?: string;
   createdAt: string;
   issuedAt: string | null;
   reservedUntil: string | null;
@@ -118,11 +120,8 @@ export default function MyOrdersPage() {
   );
 }
 
-function formatDate(dateStr: string | undefined) {
-  if (!dateStr) return 'N/A';
-  const date = new Date(dateStr);
-  if (isNaN(date.getTime())) return 'Invalid Date';
-  return date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+function renderDate(dateStr: string | undefined) {
+  return formatDate(dateStr);
 }
 
 function OrderCard({ order, onUpdate }: { order: Order; onUpdate: () => void }) {
@@ -204,11 +203,11 @@ function OrderCard({ order, onUpdate }: { order: Order; onUpdate: () => void }) 
         <div className="grid grid-cols-2 gap-4 sm:gap-8 pt-4 border-t border-neutral-100">
           <div>
             <p className="text-[10px] sm:text-xs text-neutral-400 uppercase font-bold tracking-widest mb-1">Rented On</p>
-            <p className="text-xs sm:text-sm font-medium">{formatDate(order.createdAt)}</p>
+            <p className="text-xs sm:text-sm font-medium">{renderDate(order.createdAt)}</p>
           </div>
           <div>
             <p className="text-[10px] sm:text-xs text-neutral-400 uppercase font-bold tracking-widest mb-1">Return Due</p>
-            <p className="text-xs sm:text-sm font-medium">{formatDate(order.plannedEndDate)}</p>
+            <p className="text-xs sm:text-sm font-medium">{renderDate(order.plannedEndDate)}</p>
           </div>
         </div>
 

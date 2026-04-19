@@ -25,4 +25,7 @@ public interface OrderRepository extends JpaRepository<Order, UUID> {
 
     @EntityGraph(attributePaths = {"renter", "items", "items.model"})
     java.util.List<Order> findTop20ByBranchEndIdAndStatusInOrderByActualEndDateDesc(UUID branchId, java.util.Collection<com.duwniy.toolsly.entity.OrderStatus> statuses);
+
+    @EntityGraph(attributePaths = {"renter", "items", "items.model"})
+    java.util.List<Order> findTop20ByBranchStartIdAndStatusInOrderByCreatedAtDesc(UUID branchId, java.util.Collection<com.duwniy.toolsly.entity.OrderStatus> statuses);
 }

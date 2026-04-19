@@ -19,8 +19,8 @@ public class UserFinancesResponse {
     public static class OrderSummary {
         private String id;
         private String toolName;
-        private String startDate;
-        private String endDate;
+        private java.time.OffsetDateTime createdAt;
+        private java.time.OffsetDateTime plannedEndDate;
         private BigDecimal finalPrice;
         private String status;
     }

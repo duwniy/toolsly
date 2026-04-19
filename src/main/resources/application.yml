@@ -3,6 +3,10 @@ spring:
     name: toolsly
   config:
     import: optional:file:.env[.properties]
+  jackson:
+    time-zone: UTC
+    serialization:
+      write-dates-as-timestamps: false
   datasource:
     # Most properties are loaded from .env
     # Default values for local development if .env is missing
