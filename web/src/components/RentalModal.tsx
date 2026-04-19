@@ -87,25 +87,25 @@ export default function RentalModal({ isOpen, onClose, item }: RentalModalProps)
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white w-full max-w-md rounded-2xl overflow-hidden border border-neutral-100 flex flex-col animate-in zoom-in-95 duration-200">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="bg-white w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl overflow-hidden border border-neutral-100 flex flex-col animate-in slide-in-from-bottom sm:zoom-in-95 duration-200 max-h-[90vh] sm:max-h-none">
         {/* Header */}
-        <div className="relative p-6 border-b border-neutral-100">
+        <div className="relative p-4 sm:p-6 border-b border-neutral-100">
           <button 
             onClick={onClose}
-            className="absolute right-4 top-4 p-2 hover:bg-neutral-100 rounded-full transition-colors"
+            className="absolute right-3 sm:right-4 top-3 sm:top-4 p-2 hover:bg-neutral-100 rounded-full transition-colors"
           >
             <X className="w-4 h-4 text-neutral-400" />
           </button>
           
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-black text-white rounded-full text-xs font-medium mb-3">
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-black text-white rounded-full text-xs font-medium mb-2 sm:mb-3">
             <ShieldCheck className="w-3 h-3" />
             Secure Booking
           </div>
           
-          <h2 className="text-xl font-semibold tracking-tight">{item.modelName}</h2>
-          <div className="flex items-center gap-2 mt-1">
-            <p className="text-neutral-400 text-sm">{item.categoryName} - {item.branchName}</p>
+          <h2 className="text-lg sm:text-xl font-semibold tracking-tight pr-8">{item.modelName}</h2>
+          <div className="flex flex-wrap items-center gap-2 mt-1">
+            <p className="text-neutral-400 text-xs sm:text-sm">{item.categoryName} - {item.branchName}</p>
             <span className="px-2 py-0.5 bg-neutral-100 text-neutral-600 rounded text-[10px] font-bold border border-neutral-200 uppercase">
               {item.condition || 'USED'}
             </span>
@@ -113,19 +113,19 @@ export default function RentalModal({ isOpen, onClose, item }: RentalModalProps)
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-6 flex-1 overflow-y-auto">
-          <div className="grid grid-cols-2 gap-3">
+        <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 flex-1 overflow-y-auto">
+          <div className="grid grid-cols-2 gap-2 sm:gap-3">
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-neutral-400 uppercase tracking-wider flex items-center gap-1.5">
+              <label className="text-[10px] sm:text-xs font-medium text-neutral-400 uppercase tracking-wider flex items-center gap-1.5">
                 <Calendar className="w-3 h-3" /> Start Date
               </label>
-              <div className="w-full px-3 py-2.5 bg-neutral-50 border border-neutral-100 rounded-lg text-neutral-400 text-sm">
+              <div className="w-full px-3 py-2 sm:py-2.5 bg-neutral-50 border border-neutral-100 rounded-lg text-neutral-400 text-xs sm:text-sm">
                 Today (Now)
               </div>
             </div>
             
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-neutral-400 uppercase tracking-wider flex items-center gap-1.5">
+              <label className="text-[10px] sm:text-xs font-medium text-neutral-400 uppercase tracking-wider flex items-center gap-1.5">
                 <Calendar className="w-3 h-3" /> End Date
               </label>
               <input 
@@ -133,27 +133,27 @@ export default function RentalModal({ isOpen, onClose, item }: RentalModalProps)
                 min={new Date(Date.now() + 86400000).toISOString().split('T')[0]}
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="w-full px-3 py-2.5 bg-white border border-neutral-200 rounded-lg focus:border-black outline-none transition-all text-sm"
+                className="w-full px-3 py-2 sm:py-2.5 bg-white border border-neutral-200 rounded-lg focus:border-black outline-none transition-all text-xs sm:text-sm"
               />
             </div>
           </div>
 
           {/* Pricing Section */}
-          <div className="p-5 bg-neutral-50 rounded-xl border border-neutral-100 space-y-4">
+          <div className="p-3 sm:p-5 bg-neutral-50 rounded-xl border border-neutral-100 space-y-3 sm:space-y-4">
             <div className="flex justify-between items-center">
-              <h4 className="text-sm font-medium">Price Breakdown</h4>
+              <h4 className="text-xs sm:text-sm font-medium">Price Breakdown</h4>
               {loadingQuote && <Loader2 className="w-4 h-4 animate-spin text-neutral-400" />}
             </div>
 
             {quote ? (
               <div className="space-y-2">
-                <div className="flex justify-between text-sm">
+                <div className="flex justify-between text-xs sm:text-sm">
                   <span className="text-neutral-500">Base Rental ({quote?.rentalDays ?? 0} days)</span>
                   <span className="font-medium">RUB {(quote?.basePrice ?? 0).toLocaleString()}</span>
                 </div>
                 
                 {(quote?.weekendMarkup ?? 0) > 0 && (
-                  <div className="flex justify-between text-sm text-neutral-600">
+                  <div className="flex justify-between text-xs sm:text-sm text-neutral-600">
                     <span title={quote?.markupReasons?.join(', ') ?? ''} className="cursor-help flex items-center gap-1">
                       <Info className="w-3 h-3" /> Markup
                     </span>
@@ -162,7 +162,7 @@ export default function RentalModal({ isOpen, onClose, item }: RentalModalProps)
                 )}
 
                 {(quote?.discountAmount ?? 0) > 0 && (
-                  <div className="flex justify-between text-sm text-neutral-600">
+                  <div className="flex justify-between text-xs sm:text-sm text-neutral-600">
                     <span title={quote?.discountReasons?.join(', ') ?? ''} className="cursor-help flex items-center gap-1">
                       <Info className="w-3 h-3" /> Discount
                     </span>
@@ -171,20 +171,20 @@ export default function RentalModal({ isOpen, onClose, item }: RentalModalProps)
                 )}
 
                 <div className="pt-3 border-t border-neutral-200 flex justify-between items-end">
-                  <span className="text-xs text-neutral-400 uppercase tracking-wider">Total</span>
-                  <span className="text-xl font-semibold tracking-tight">RUB {(quote?.totalPrice ?? 0).toLocaleString()}</span>
+                  <span className="text-[10px] sm:text-xs text-neutral-400 uppercase tracking-wider">Total</span>
+                  <span className="text-lg sm:text-xl font-semibold tracking-tight">RUB {(quote?.totalPrice ?? 0).toLocaleString()}</span>
                 </div>
               </div>
             ) : (
-              <div className="h-20 flex items-center justify-center text-neutral-300 text-sm">
+              <div className="h-16 sm:h-20 flex items-center justify-center text-neutral-300 text-xs sm:text-sm">
                 Select dates to see price preview
               </div>
             )}
           </div>
 
-          <div className="flex items-start gap-3 p-4 bg-neutral-50 rounded-xl border border-neutral-100">
+          <div className="flex items-start gap-2 sm:gap-3 p-3 sm:p-4 bg-neutral-50 rounded-xl border border-neutral-100">
             <AlertCircle className="w-4 h-4 text-neutral-400 shrink-0 mt-0.5" />
-            <p className="text-xs text-neutral-500 leading-relaxed">
+            <p className="text-[10px] sm:text-xs text-neutral-500 leading-relaxed">
               Confirming this rental will reserve the item at <strong className="text-neutral-700">{item.branchName}</strong> for 15 minutes. 
               Please arrive within this window to complete the pickup.
             </p>
@@ -192,11 +192,11 @@ export default function RentalModal({ isOpen, onClose, item }: RentalModalProps)
         </div>
 
         {/* Action */}
-        <div className="p-6 pt-0">
+        <div className="p-4 sm:p-6 pt-0 pb-6 sm:pb-6">
           <button 
             disabled={!quote || booking}
             onClick={handleBooking}
-            className="w-full py-3 bg-black text-white rounded-xl font-medium hover:bg-neutral-800 active:scale-95 transition-all disabled:opacity-30 disabled:hover:bg-black flex items-center justify-center gap-2"
+            className="w-full py-2.5 sm:py-3 bg-black text-white rounded-xl font-medium hover:bg-neutral-800 active:scale-95 transition-all disabled:opacity-30 disabled:hover:bg-black flex items-center justify-center gap-2 text-sm sm:text-base"
           >
             {booking ? (
               <Loader2 className="w-4 h-4 animate-spin" />
