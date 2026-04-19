@@ -18,12 +18,20 @@ public class OrderResponse {
     private String staffEmail;
     private OrderStatus status;
     private BigDecimal totalPrice;
+    private OffsetDateTime createdAt;
     private OffsetDateTime plannedEndDate;
     private OffsetDateTime actualEndDate;
+    private OffsetDateTime reservedUntil;
+    private OffsetDateTime issuedAt;
+    private BigDecimal currentAccruedPrice;
     private UUID branchStartId;
     private String branchStartName;
     private UUID branchEndId;
     private String branchEndName;
+    private UUID targetBranchId;
+    private String targetBranchName;
+    private String staffComment;
+    private Boolean isIncident;
     private List<OrderItemSummary> items;
 
     @Data

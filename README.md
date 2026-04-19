@@ -65,7 +65,7 @@ Once the backend is running, interactive API docs are available via Swagger:
 
 | Rule            | Description                                                     |
 |-----------------|-----------------------------------------------------------------|
-| Damage Penalty  | 10% of market value for WORN, 50% for BROKEN items              |
+| Damage Penalty  | 30% of market value for DAMAGED, 50% for BROKEN items          |
 | Overdue Penalty | +50% of daily rental rate for each overdue day                   |
 | Capacity Check  | Returns are blocked if target branch storage is at full capacity |
 | Optimistic Lock | Concurrent order modifications are rejected with a 409 Conflict  |
@@ -91,6 +91,4 @@ toolsly/
 └── pom.xml
 ```
 
-## License
 
-Private project — all rights reserved.

@@ -17,5 +17,6 @@
   - 8.2: Real-World Data Population (V11)
   - 8.3: UAT Streamlining (Focus Mode)
   - 8.4: Real Data Sync & Dynamic Profiles (`GET /api/users/me`)
+  - 8.5: Equipment Condition Tracking, History Timelines & Lifecycle Audit
 - [ ] **Mile 9**: Production Deployment (Render & Vercel) - IN PROGRESS
 - [ ] **Mile 10**: Advanced Analytics & Predictive Maintenance

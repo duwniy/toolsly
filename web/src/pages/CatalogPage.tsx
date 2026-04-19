@@ -12,6 +12,7 @@ interface EquipmentItem {
   branchName: string;
   categoryName: string;
   status: string;
+  condition: string;
   dailyRate: number;
 }
 
@@ -100,11 +101,16 @@ export default function CatalogPage() {
                   <div className="p-3 bg-neutral-50 rounded-xl group-hover:bg-black group-hover:text-white transition-colors duration-300">
                     <Package className="w-5 h-5" />
                   </div>
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                    item.status === 'AVAILABLE' ? 'bg-neutral-900 text-white' : 'bg-neutral-100 text-neutral-500'
-                  }`}>
-                    {item.status}
-                  </span>
+                  <div className="flex gap-2">
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                      item.status === 'AVAILABLE' ? 'bg-neutral-900 text-white' : 'bg-neutral-100 text-neutral-500'
+                    }`}>
+                      {item.status}
+                    </span>
+                    <span className="px-3 py-1 bg-neutral-100 text-neutral-600 rounded-full text-xs font-medium border border-neutral-200">
+                      {item.condition || 'USED'}
+                    </span>
+                  </div>
                 </div>
                 
                 <h3 className="text-lg font-semibold tracking-tight mb-1">{item.modelName}</h3>

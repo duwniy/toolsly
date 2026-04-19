@@ -22,6 +22,17 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserController {
 
     private final UserRepository userRepository;
+    private final com.duwniy.toolsly.service.OrderService orderService;
+
+    @GetMapping("/me/finances")
+    @Operation(summary = "Get current user's financial overview",
+               description = "Returns calculated stats for total spent, active rental debt, and recent payments")
+    public ResponseEntity<com.duwniy.toolsly.dto.UserFinancesResponse> getMyFinances(
+            @AuthenticationPrincipal ToolslyUserPrincipal principal
+    ) {
+        log.info("REST request to get finances for user ID: {}", principal.getUserId());
+        return ResponseEntity.ok(orderService.getUserFinances(principal.getUserId()));
+    }
 
     @GetMapping("/me")
     @Operation(summary = "Get current user profile",

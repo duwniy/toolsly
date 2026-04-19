@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Search, CheckCircle2, AlertCircle, PackageCheck } from 'lucide-react';
 import { toast } from 'sonner';
 import apiClient from '../api/apiClient';
@@ -16,6 +16,7 @@ export default function IssueToolPage() {
   const [orderId, setOrderId] = useState('');
   const [searchId, setSearchId] = useState('');
   const { user } = useAuth();
+  const queryClient = useQueryClient();
 
   const { data: order, isLoading, error, refetch } = useQuery({
     queryKey: ['order', searchId],
@@ -35,6 +36,7 @@ export default function IssueToolPage() {
     onSuccess: () => {
       refetch();
       toast.success('Order issued successfully!');
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
     },
     onError: (err: any) => {
       toast.error(err.response?.data?.message || err.message);

@@ -32,7 +32,6 @@ public class InventoryService {
 
     @Transactional
     public void updateLocation(UUID itemId, Branch newBranch) {
-        // Need to check storage capacity here in OrderService or here
         EquipmentItem item = itemRepository.findById(itemId)
                 .orElseThrow(() -> new BusinessException("Item not found", "ITEM_NOT_FOUND"));
         log.info("Updating location for item {}: branch {}", itemId, newBranch != null ? newBranch.getId() : "NONE");
@@ -46,7 +45,7 @@ public class InventoryService {
                 .orElseThrow(() -> new BusinessException("Item not found", "ITEM_NOT_FOUND"));
         log.info("Setting soft lock for item {} for {} minutes", itemId, minutes);
         item.setReservedUntil(OffsetDateTime.now().plusMinutes(minutes));
-        item.setStatus(ItemStatus.AVAILABLE); // Keep available but with lock logic in queries
+        item.setStatus(ItemStatus.AVAILABLE); 
         itemRepository.save(item);
     }
     
@@ -56,6 +55,16 @@ public class InventoryService {
                 .orElseThrow(() -> new BusinessException("Item not found", "ITEM_NOT_FOUND"));
         log.info("Updating condition for item {}: {} -> {}", itemId, item.getCondition(), condition);
         item.setCondition(condition);
+        itemRepository.save(item);
+    }
+
+    @Transactional
+    public void completeMaintenance(UUID itemId) {
+        EquipmentItem item = itemRepository.findById(itemId)
+                .orElseThrow(() -> new BusinessException("Item not found", "ITEM_NOT_FOUND"));
+        log.info("Completing maintenance for item {}. Reseting total rental days counter.", itemId);
+        item.setStatus(ItemStatus.AVAILABLE);
+        item.setTotalRentalDays(0);
         itemRepository.save(item);
     }
 }

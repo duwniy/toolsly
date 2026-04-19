@@ -47,6 +47,7 @@ public class OrderService {
     private final UserRepository userRepository;
     private final EquipmentModelRepository modelRepository;
     private final OrderMapper orderMapper;
+    private final com.duwniy.toolsly.repository.AuditLogRepository auditLogRepository;
 
     @Transactional(readOnly = true)
     public OrderResponse getOrderById(UUID orderId) {
@@ -54,6 +55,14 @@ public class OrderService {
                 .orElseThrow(() -> new BusinessException("Order not found", "ORDER_NOT_FOUND"));
         enforceOrderAccess(order);
         return orderMapper.toResponse(order);
+    }
+
+    @Transactional(readOnly = true)
+    public java.util.List<OrderResponse> getOrdersByRenter(UUID renterId) {
+        return orderRepository.findAllByRenterIdOrderByCreatedAtDesc(renterId)
+                .stream()
+                .map(this::toResponseWithAccrued)
+                .collect(java.util.stream.Collectors.toList());
     }
 
     @Transactional
@@ -96,15 +105,18 @@ public class OrderService {
                 .orElseThrow(() -> new BusinessException("No available items for this model in the selected branch", "NO_ITEMS_AVAILABLE"));
 
         // Atomic soft-lock
+        OffsetDateTime reservedUntil = OffsetDateTime.now().plusMinutes(RESERVATION_LOCK_MINUTES);
         item.setStatus(ItemStatus.RESERVED);
-        item.setReservedUntil(OffsetDateTime.now().plusMinutes(RESERVATION_LOCK_MINUTES));
+        item.setReservedUntil(reservedUntil);
         itemRepository.save(item);
 
         Order order = new Order();
         order.setRenter(renter);
         order.setBranchStart(branch);
         order.setPlannedEndDate(endDate);
-        order.setStatus(OrderStatus.CREATED);
+        order.setStatus(OrderStatus.RESERVED);
+        order.setReservedUntil(reservedUntil);
+        item.setReservedUntil(reservedUntil);
         order.setItems(List.of(item));
         
         order.setTotalPrice(pricingEngineService.calculatePrice(model, OffsetDateTime.now(), endDate).getTotalPrice());
@@ -163,6 +175,9 @@ public class OrderService {
                 order.getPlannedEndDate()
         ).getTotalPrice());
 
+        OffsetDateTime reservedUntil = now.plusMinutes(RESERVATION_LOCK_MINUTES);
+        order.setReservedUntil(reservedUntil);
+        order.getItems().forEach(item -> item.setReservedUntil(reservedUntil));
         order.setStatus(OrderStatus.RESERVED);
         Order saved = orderRepository.save(order);
         log.info("Order [{}] successfully reserved for user [{}]. Total price: {}", saved.getId(), saved.getRenter().getEmail(), saved.getTotalPrice());
@@ -197,16 +212,52 @@ public class OrderService {
             throw new BusinessException("Only staff members can issue orders", "ACCESS_DENIED");
         }
 
-        if (!order.getRenter().isVerified()
-                && order.getTotalPrice() != null
-                && order.getTotalPrice().compareTo(BigDecimal.valueOf(5000)) > 0) {
-            throw new BusinessException("User verification required for high-value items (>5000 RUB)", "VERIFICATION_REQUIRED");
+        boolean highValue = order.getItems().stream()
+                .anyMatch(item -> item.getModel().getMarketValue() != null 
+                        && item.getModel().getMarketValue().compareTo(BigDecimal.valueOf(5000)) > 0);
+
+        if (!order.getRenter().isVerified() && highValue) {
+            throw new BusinessException("User verification required for orders containing high-value items (>5000 RUB market value)", "VERIFICATION_REQUIRED");
         }
 
         order.setStatus(OrderStatus.ISSUED);
         order.setStaff(staff);
+        order.setIssuedAt(OffsetDateTime.now());
+        
+        // Transition items to RENTED status
+        order.getItems().forEach(item -> {
+            item.setStatus(ItemStatus.RENTED);
+            item.setReservedUntil(null);
+            itemRepository.save(item);
+        });
+        
         orderRepository.save(order);
         log.info("Staff [{}] issued Order [{}] to User [{}]", staff.getEmail(), order.getId(), order.getRenter().getEmail());
+    }
+
+    @Transactional
+    public void requestReturn(UUID orderId, UUID targetBranchId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new BusinessException("Order not found", "ORDER_NOT_FOUND"));
+
+        if (order.getStatus() != OrderStatus.ISSUED) {
+            throw new BusinessException("Only issued orders can initiate return", "INVALID_STATUS");
+        }
+
+        Branch targetBranch = branchRepository.findById(targetBranchId)
+                .orElseThrow(() -> new BusinessException("Branch not found", "BRANCH_NOT_FOUND"));
+
+        long currentItemsCount = itemRepository.countByBranch(targetBranch);
+        int incomingItemsCount = order.getItems().size();
+
+        if (currentItemsCount + incomingItemsCount > targetBranch.getStorageCapacity()) {
+            throw new BusinessException("Target branch is full", "BRANCH_FULL");
+        }
+
+        order.setStatus(OrderStatus.RETURN_PENDING);
+        order.setTargetBranch(targetBranch);
+        orderRepository.save(order);
+        log.info("User requested return for Order [{}] to Branch [{}]", order.getId(), targetBranch.getName());
     }
 
     @Transactional
@@ -214,8 +265,8 @@ public class OrderService {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new BusinessException("Order not found", "ORDER_NOT_FOUND"));
         
-        if (order.getStatus() != OrderStatus.ISSUED) {
-            throw new BusinessException("Order must be ISSUED to be returned", "INVALID_STATUS");
+        if (order.getStatus() != OrderStatus.ISSUED && order.getStatus() != OrderStatus.RETURN_PENDING) {
+            throw new BusinessException("Order must be ISSUED or RETURN_PENDING to be returned", "INVALID_STATUS");
         }
 
         if (request == null || request.getBranchId() == null) {
@@ -240,7 +291,7 @@ public class OrderService {
         }
 
         OffsetDateTime now = OffsetDateTime.now();
-        BigDecimal totalFine = BigDecimal.ZERO;
+        BigDecimal totalPenalty = BigDecimal.ZERO;
         Map<UUID, Condition> itemConditions = (request.getItemConditions() == null) ? Map.of() : request.getItemConditions();
 
         // 1. Overdue Penalty Calculation
@@ -252,26 +303,69 @@ public class OrderService {
                 // +50% markup for overdue days (1.5x daily rate)
                 BigDecimal dailyRate = pricingEngineService.calculatePrice(item.getModel(), order.getPlannedEndDate(), order.getPlannedEndDate().plusDays(1)).getTotalPrice();
                 BigDecimal itemFine = dailyRate.multiply(BigDecimal.valueOf(1.5)).multiply(BigDecimal.valueOf(overdueDays));
-                totalFine = totalFine.add(itemFine);
+                totalPenalty = totalPenalty.add(itemFine);
             }
         }
 
-        // 2. Damage Penalty & Item Update
+        // Duration calculation: from ISSUE to NOW
+        OffsetDateTime rentalStart = order.getIssuedAt() != null ? order.getIssuedAt() : order.getCreatedAt();
+        long minutes = java.time.temporal.ChronoUnit.MINUTES.between(rentalStart, now);
+        long actualRentalDays = (long) Math.ceil((double) minutes / (24 * 60));
+        if (actualRentalDays <= 0) actualRentalDays = 1;
+
+        // 2. Damage Penalty & Item Update & Maintenance logic
         for (EquipmentItem item : order.getItems()) {
             Condition updatedCondition = itemConditions.get(item.getId());
+            Condition oldCondition = item.getCondition();
+            
             if (updatedCondition != null) {
-                // USED: 10%, DAMAGED: 50% of Market Value when condition degrades
-                if (updatedCondition == Condition.USED && item.getCondition() == Condition.NEW) {
-                    BigDecimal damageFine = item.getModel().getMarketValue().multiply(BigDecimal.valueOf(0.1));
-                    totalFine = totalFine.add(damageFine);
-                } else if (updatedCondition == Condition.DAMAGED && item.getCondition() != Condition.DAMAGED) {
+                // Penalties: DAMAGED: 30%, BROKEN: 50% of Market Value
+                if (updatedCondition == Condition.DAMAGED && oldCondition != Condition.DAMAGED) {
+                    BigDecimal damageFine = item.getModel().getMarketValue().multiply(BigDecimal.valueOf(0.3));
+                    totalPenalty = totalPenalty.add(damageFine);
+                    log.info("FINES_APPLIED: Penalty of {} RUB applied to order {} for DAMAGED item {}", damageFine, order.getId(), item.getId());
+                } else if (updatedCondition == Condition.BROKEN && oldCondition != Condition.BROKEN) {
                     BigDecimal damageFine = item.getModel().getMarketValue().multiply(BigDecimal.valueOf(0.5));
-                    totalFine = totalFine.add(damageFine);
+                    totalPenalty = totalPenalty.add(damageFine);
+                    log.info("FINES_APPLIED: Penalty of {} RUB applied to order {} for BROKEN item {}", damageFine, order.getId(), item.getId());
                 }
                 item.setCondition(updatedCondition);
+
+                // Manual Audit Log for condition change
+                String staffName = "System";
+                Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+                if (auth != null && auth.getPrincipal() instanceof ToolslyUserPrincipal principal) {
+                    staffName = principal.getUsername();
+                }
+
+                auditLogRepository.save(com.duwniy.toolsly.entity.AuditLog.builder()
+                        .entityName("EquipmentItem")
+                        .entityId(item.getId())
+                        .action("CONDITION_CHANGE")
+                        .oldValue(Map.of("condition", oldCondition != null ? oldCondition.name() : "NEW"))
+                        .newValue(Map.of(
+                                "condition", updatedCondition.name(),
+                                "staffName", staffName,
+                                "comment", request.getStaffComment() != null ? request.getStaffComment() : "Condition updated during return"
+                        ))
+                        .timestamp(OffsetDateTime.now())
+                        .build());
             }
+            
+            // Update total rental days of the physical item
+            int currentTotalDays = item.getTotalRentalDays() != null ? item.getTotalRentalDays() : 0;
+            item.setTotalRentalDays(currentTotalDays + (int) actualRentalDays);
+            
             item.setBranch(branch);
-            item.setStatus(ItemStatus.AVAILABLE);
+            
+            // Maintenance logic: if > 50 days, auto-maintenance
+            if (item.getTotalRentalDays() > 50) {
+                log.info("Item {} exceeded 50 rental days (total: {}). Setting status to MAINTENANCE", item.getId(), item.getTotalRentalDays());
+                item.setStatus(ItemStatus.MAINTENANCE);
+            } else {
+                item.setStatus(ItemStatus.AVAILABLE);
+            }
+            
             item.setReservedUntil(null);
             itemRepository.save(item);
         }
@@ -279,10 +373,18 @@ public class OrderService {
         order.setStatus(OrderStatus.RETURNED);
         order.setActualEndDate(now);
         order.setBranchEnd(branch);
+        order.setStaffComment(request.getStaffComment());
+        
+        // Automated incident detection: If DAMAGED/BROKEN or manually flagged
+        boolean hasDamagedItems = request.getItemConditions() != null && request.getItemConditions().values().stream()
+                .anyMatch(c -> c == Condition.DAMAGED || c == Condition.BROKEN);
+        order.setIsIncident(Boolean.TRUE.equals(request.getIsIncident()) || hasDamagedItems);
+
         BigDecimal baseTotal = (order.getTotalPrice() == null) ? BigDecimal.ZERO : order.getTotalPrice();
-        order.setTotalPrice(baseTotal.add(totalFine));
+        order.setTotalPrice(baseTotal.add(totalPenalty));
         orderRepository.save(order);
-        log.info("Order [{}] returned to Branch [{}]. Total price updated to {}", order.getId(), branch.getName(), order.getTotalPrice());
+        log.info("Order [{}] returned to Branch [{}]. Penalty: {}. Total Price: {}. Incident: {}", 
+                order.getId(), branch.getName(), totalPenalty, order.getTotalPrice(), order.getIsIncident());
     }
 
     private void enforceOrderAccess(Order order) {
@@ -296,4 +398,67 @@ public class OrderService {
         }
     }
 
+    private OrderResponse toResponseWithAccrued(Order order) {
+        OrderResponse response = orderMapper.toResponse(order);
+        if (order.getStatus() == OrderStatus.ISSUED && order.getIssuedAt() != null) {
+            response.setCurrentAccruedPrice(calculateCurrentAccruedPrice(order.getId()));
+        }
+        return response;
+    }
+
+    public BigDecimal calculateCurrentAccruedPrice(UUID orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new BusinessException("Order not found", "ORDER_NOT_FOUND"));
+        
+        if (order.getStatus() != OrderStatus.ISSUED || order.getIssuedAt() == null) {
+            return BigDecimal.ZERO;
+        }
+
+        OffsetDateTime start = order.getIssuedAt();
+        OffsetDateTime now = OffsetDateTime.now();
+        
+        // Use pricing engine to calculate what was already used
+        EquipmentModel model = order.getItems().iterator().next().getModel();
+        return pricingEngineService.calculatePrice(model, start, now).getTotalPrice();
+    }
+
+    @Transactional(readOnly = true)
+    public com.duwniy.toolsly.dto.UserFinancesResponse getUserFinances(UUID userId) {
+        List<Order> allOrders = orderRepository.findAllByRenterIdOrderByCreatedAtDesc(userId);
+        
+        BigDecimal totalSpent = allOrders.stream()
+                .filter(o -> o.getStatus() == OrderStatus.CLOSED || o.getStatus() == OrderStatus.RETURNED)
+                .map(o -> o.getTotalPrice() != null ? o.getTotalPrice() : BigDecimal.ZERO)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        
+        BigDecimal activeRentalsCost = allOrders.stream()
+                .filter(o -> o.getStatus() == OrderStatus.ISSUED)
+                .map(o -> calculateCurrentAccruedPrice(o.getId()))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        
+        BigDecimal potentialFines = allOrders.stream()
+                .filter(o -> o.getStatus() == OrderStatus.RESERVED)
+                .map(o -> o.getTotalPrice() != null ? o.getTotalPrice() : BigDecimal.ZERO)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        List<com.duwniy.toolsly.dto.UserFinancesResponse.OrderSummary> recentSub = allOrders.stream()
+                .filter(o -> o.getStatus() == OrderStatus.CLOSED || o.getStatus() == OrderStatus.RETURNED)
+                .limit(10)
+                .map(o -> com.duwniy.toolsly.dto.UserFinancesResponse.OrderSummary.builder()
+                        .id(o.getId().toString())
+                        .toolName(o.getItems().isEmpty() ? "N/A" : o.getItems().get(0).getModel().getName())
+                        .startDate(o.getCreatedAt().toString())
+                        .endDate(o.getActualEndDate() != null ? o.getActualEndDate().toString() : "N/A")
+                        .finalPrice(o.getTotalPrice())
+                        .status(o.getStatus().name())
+                        .build())
+                .collect(java.util.stream.Collectors.toList());
+
+        return com.duwniy.toolsly.dto.UserFinancesResponse.builder()
+                .totalSpent(totalSpent)
+                .activeRentalsCost(activeRentalsCost)
+                .potentialFines(potentialFines)
+                .recentPayments(recentSub)
+                .build();
+    }
 }

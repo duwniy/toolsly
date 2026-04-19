@@ -1,14 +1,16 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, NavLink, Navigate, useNavigate } from 'react-router-dom';
 import { Toaster } from 'sonner';
-import { PackageCheck, LayoutGrid, User, Hammer, LogOut } from 'lucide-react';
+import { LoginPage } from './pages/LoginPage';
+import FinancesPage from './pages/FinancesPage';
 import IssueToolPage from './pages/IssueToolPage';
 import DashboardPage from './pages/DashboardPage';
 import ReturnsPage from './pages/ReturnsPage';
 import CatalogPage from './pages/CatalogPage';
 import ProfilePage from './pages/ProfilePage';
-import { LoginPage } from './pages/LoginPage';
+import MyOrdersPage from './pages/MyOrdersPage';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { PackageCheck, LayoutGrid, User, Hammer, LogOut, ClipboardList, Wallet } from 'lucide-react';
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) => 
   `flex items-center gap-3 px-4 py-2.5 text-sm transition-all duration-200 rounded-lg ${
@@ -47,6 +49,14 @@ function Layout({ children }: { children: React.ReactNode }) {
           
           <NavLink to="/catalog" className={navLinkClass}>
             <PackageCheck className="w-4 h-4" /> Catalog
+          </NavLink>
+
+          <NavLink to="/my-orders" className={navLinkClass}>
+            <ClipboardList className="w-4 h-4" /> My Orders
+          </NavLink>
+          
+          <NavLink to="/finances" className={navLinkClass}>
+            <Wallet className="w-4 h-4" /> Finances
           </NavLink>
           
           <div className="pt-4">
@@ -146,6 +156,20 @@ const AppRoutes = () => {
         <ProtectedRoute>
           <Layout>
             <ProfilePage />
+          </Layout>
+        </ProtectedRoute>
+      } />
+      <Route path="/my-orders" element={
+        <ProtectedRoute>
+          <Layout>
+            <MyOrdersPage />
+          </Layout>
+        </ProtectedRoute>
+      } />
+      <Route path="/finances" element={
+        <ProtectedRoute>
+          <Layout>
+            <FinancesPage />
           </Layout>
         </ProtectedRoute>
       } />

@@ -11,8 +11,9 @@ import com.duwniy.toolsly.security.ToolslyUserPrincipal;
 import com.duwniy.toolsly.service.InventoryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import com.duwniy.toolsly.repository.AuditLogRepository;
+import com.duwniy.toolsly.dto.ItemHistoryResponse;
+import java.time.OffsetDateTime;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -20,17 +21,33 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 @RestController
 @RequestMapping("/api/inventory")
-@RequiredArgsConstructor
 @Tag(name = "Inventory", description = "Endpoints for managing tools, branches, and availability")
-@Slf4j
 public class InventoryController {
+
+    private static final Logger log = LoggerFactory.getLogger(InventoryController.class);
 
     private final InventoryService inventoryService;
     private final EquipmentItemRepository itemRepository;
     private final BranchRepository branchRepository;
     private final EquipmentItemMapper itemMapper;
+    private final AuditLogRepository auditLogRepository;
+
+    public InventoryController(InventoryService inventoryService,
+                               EquipmentItemRepository itemRepository,
+                               BranchRepository branchRepository,
+                               EquipmentItemMapper itemMapper,
+                               AuditLogRepository auditLogRepository) {
+        this.inventoryService = inventoryService;
+        this.itemRepository = itemRepository;
+        this.branchRepository = branchRepository;
+        this.itemMapper = itemMapper;
+        this.auditLogRepository = auditLogRepository;
+    }
 
     @GetMapping("/items")
     @Operation(summary = "List equipment items", description = "Filter by branch or status")
@@ -43,7 +60,6 @@ public class InventoryController {
             List<EquipmentItem> items;
             UUID effectiveBranchId = branchId;
 
-            // For STAFF with an assigned branch, scope results to their branch
             if (principal != null && principal.getRole() == Role.STAFF && principal.getBranchId() != null) {
                 effectiveBranchId = principal.getBranchId();
             }
@@ -52,8 +68,6 @@ public class InventoryController {
                 effectiveBranchId,
                 principal != null ? principal.getUsername() : "anonymous");
 
-            // If we have a branch filter, apply it; otherwise return all items
-            // Using WithDetails queries with LEFT JOIN to eagerly and safely load relationships
             if (effectiveBranchId != null) {
                 items = itemRepository.findByBranchIdWithDetails(effectiveBranchId);
             } else {
@@ -71,5 +85,31 @@ public class InventoryController {
     public ResponseEntity<List<Branch>> getAllBranches() {
         log.info("REST request to get all branches");
         return ResponseEntity.ok(branchRepository.findAll());
+    }
+
+    @PostMapping("/items/{itemId}/maintenance/complete")
+    @Operation(summary = "Complete maintenance", description = "Returns item to AVAILABLE status and resets rental days counter")
+    public ResponseEntity<Void> completeMaintenance(@PathVariable UUID itemId) {
+        log.info("REST request to complete maintenance for item: {}", itemId);
+        inventoryService.completeMaintenance(itemId);
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/items/{id}/history")
+    @Operation(summary = "Get item condition history", description = "Returns timeline of condition changes from audit logs")
+    public ResponseEntity<List<com.duwniy.toolsly.dto.ItemHistoryResponse>> getItemHistory(@PathVariable UUID id) {
+        log.info("REST request to get history for item: {}", id);
+        List<com.duwniy.toolsly.dto.ItemHistoryResponse> history = auditLogRepository.findByEntityNameAndEntityIdOrderByTimestampDesc("EquipmentItem", id)
+                .stream()
+                .filter(log -> "CONDITION_CHANGE".equals(log.getAction()))
+                .map(log -> com.duwniy.toolsly.dto.ItemHistoryResponse.builder()
+                        .timestamp(log.getTimestamp())
+                        .oldCondition((String) log.getOldValue().get("condition"))
+                        .newCondition((String) log.getNewValue().get("condition"))
+                        .staffName((String) log.getNewValue().get("staffName"))
+                        .comment((String) log.getNewValue().get("comment"))
+                        .build())
+                .toList();
+        return ResponseEntity.ok(history);
     }
 }

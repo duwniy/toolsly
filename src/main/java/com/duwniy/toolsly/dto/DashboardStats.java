@@ -11,7 +11,7 @@ import java.util.List;
 public class DashboardStats {
     private BigDecimal totalRevenue;
     private Long totalOrders;
-    private Double averageOccupancy;
+    private Double occupancyRate;
     private Double damageRate;
     private List<TopModel> topModels;
     private List<RevenuePoint> revenueTrend;

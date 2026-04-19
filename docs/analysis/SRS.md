@@ -8,7 +8,7 @@
 ### 1.2. Управление инвентарем
 - **Model:** Описание (напр. "Дрель Makita"). Базовая цена, рыночная цена.
 - **Item:** Конкретный экземпляр. Статусы: `AVAILABLE`, `RENTED`, `MAINTENANCE`, `IN_TRANSIT`, `BROKEN`.
-- **Condition:** Фиксация состояния сотрудником: `NEW`, `USED`, `DAMAGED`.
+- **Condition:** Фиксация состояния сотрудником: `NEW`, `USED`, `WORN`, `DAMAGED`, `BROKEN`.
 
 ### 1.3. Жизненный цикл заказа (State Machine)
 1. `CREATED`: Выбор товаров, расчет цены.

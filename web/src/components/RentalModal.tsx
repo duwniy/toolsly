@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { X, Calendar, Info, ShieldCheck, AlertCircle, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import apiClient from '../api/apiClient';
 
 interface PriceQuote {
   basePrice: number;
-  markupAmount: number;
+  weekendMarkup: number;
   discountAmount: number;
   totalPrice: number;
+  rentalDays: number;
   markupReasons: string[];
   discountReasons: string[];
 }
@@ -22,11 +24,13 @@ interface RentalModalProps {
     branchId: string;
     branchName: string;
     categoryName: string;
+    condition: string;
     dailyRate: number;
   };
 }
 
 export default function RentalModal({ isOpen, onClose, item }: RentalModalProps) {
+  const navigate = useNavigate();
   const [endDate, setEndDate] = useState('');
   const [quote, setQuote] = useState<PriceQuote | null>(null);
   const [loadingQuote, setLoadingQuote] = useState(false);
@@ -69,8 +73,9 @@ export default function RentalModal({ isOpen, onClose, item }: RentalModalProps)
         branchId: item.branchId,
         endDate: new Date(endDate).toISOString()
       });
-      toast.success(`Reserved successfully! Order #${data.id.substring(0, 8)}`);
+      toast.success(`Reserved successfully! Redirecting...`);
       onClose();
+      navigate('/my-orders');
     } catch (err: any) {
       const errorMsg = err.response?.data?.message || 'Failed to reserve item';
       toast.error(errorMsg);
@@ -99,7 +104,12 @@ export default function RentalModal({ isOpen, onClose, item }: RentalModalProps)
           </div>
           
           <h2 className="text-xl font-semibold tracking-tight">{item.modelName}</h2>
-          <p className="text-neutral-400 text-sm">{item.categoryName} - {item.branchName}</p>
+          <div className="flex items-center gap-2 mt-1">
+            <p className="text-neutral-400 text-sm">{item.categoryName} - {item.branchName}</p>
+            <span className="px-2 py-0.5 bg-neutral-100 text-neutral-600 rounded text-[10px] font-bold border border-neutral-200 uppercase">
+              {item.condition || 'USED'}
+            </span>
+          </div>
         </div>
 
         {/* Content */}
@@ -138,31 +148,31 @@ export default function RentalModal({ isOpen, onClose, item }: RentalModalProps)
             {quote ? (
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span className="text-neutral-500">Base Rental (Daily)</span>
-                  <span className="font-medium">RUB {quote.basePrice.toLocaleString()}</span>
+                  <span className="text-neutral-500">Base Rental ({quote?.rentalDays ?? 0} days)</span>
+                  <span className="font-medium">RUB {(quote?.basePrice ?? 0).toLocaleString()}</span>
                 </div>
                 
-                {quote.markupAmount > 0 && (
+                {(quote?.weekendMarkup ?? 0) > 0 && (
                   <div className="flex justify-between text-sm text-neutral-600">
-                    <span title={quote.markupReasons.join(', ')} className="cursor-help flex items-center gap-1">
+                    <span title={quote?.markupReasons?.join(', ') ?? ''} className="cursor-help flex items-center gap-1">
                       <Info className="w-3 h-3" /> Markup
                     </span>
-                    <span className="font-medium">+ RUB {quote.markupAmount.toLocaleString()}</span>
+                    <span className="font-medium">+ RUB {(quote?.weekendMarkup ?? 0).toLocaleString()}</span>
                   </div>
                 )}
 
-                {quote.discountAmount > 0 && (
+                {(quote?.discountAmount ?? 0) > 0 && (
                   <div className="flex justify-between text-sm text-neutral-600">
-                    <span title={quote.discountReasons.join(', ')} className="cursor-help flex items-center gap-1">
+                    <span title={quote?.discountReasons?.join(', ') ?? ''} className="cursor-help flex items-center gap-1">
                       <Info className="w-3 h-3" /> Discount
                     </span>
-                    <span className="font-medium">- RUB {quote.discountAmount.toLocaleString()}</span>
+                    <span className="font-medium">- RUB {(quote?.discountAmount ?? 0).toLocaleString()}</span>
                   </div>
                 )}
 
                 <div className="pt-3 border-t border-neutral-200 flex justify-between items-end">
                   <span className="text-xs text-neutral-400 uppercase tracking-wider">Total</span>
-                  <span className="text-xl font-semibold tracking-tight">RUB {quote.totalPrice.toLocaleString()}</span>
+                  <span className="text-xl font-semibold tracking-tight">RUB {(quote?.totalPrice ?? 0).toLocaleString()}</span>
                 </div>
               </div>
             ) : (

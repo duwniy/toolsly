@@ -15,7 +15,7 @@ const COLORS = ['#000000', '#262626', '#525252', '#737373', '#a3a3a3'];
 interface DashboardStats {
   totalRevenue: number;
   totalOrders: number;
-  averageOccupancy: number;
+  occupancyRate: number;
   damageRate: number;
   topModels: Array<{ modelName: string; rentalCount: number }>;
   revenueTrend: Array<{ date: string; amount: number }>;
@@ -56,7 +56,7 @@ export default function DashboardPage() {
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-4 gap-6 animate-pulse">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 animate-pulse">
         {[1, 2, 3, 4].map(i => (
           <div key={i} className="h-36 bg-neutral-100 rounded-2xl" />
         ))}
@@ -103,7 +103,7 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard 
           title="Total Revenue" 
-          value={`$${stats?.totalRevenue?.toLocaleString()}`} 
+          value={`${stats?.totalRevenue?.toLocaleString()} ₽`} 
           icon={TrendingUp}
           trend="up"
           trendValue="12.5"
@@ -117,14 +117,14 @@ export default function DashboardPage() {
         />
         <StatCard 
           title="Branch Occupancy" 
-          value={`${stats?.averageOccupancy}%`} 
+          value={`${stats?.occupancyRate?.toFixed(1)}%`} 
           icon={Package}
           trend="down"
           trendValue="3.1"
         />
         <StatCard 
           title="Damage Rate" 
-          value={`${stats?.damageRate}%`} 
+          value={`${stats?.damageRate?.toFixed(1)}%`} 
           icon={AlertCircle}
           trend="down"
           trendValue="0.8"

@@ -21,18 +21,17 @@ public class ReportingService {
     public DashboardStats getDashboardStats(UUID branchId) {
         log.info("Generating dashboard statistics for branch ID: {}", branchId != null ? branchId : "GLOBAL");
         return DashboardStats.builder()
-                .totalRevenue(calculateMonthlyRevenue(branchId))
-                .totalOrders(countMonthlyOrders(branchId))
-                .averageOccupancy(calculateAverageOccupancy(branchId))
+                .totalRevenue(calculateTotalRevenue(branchId))
+                .totalOrders(countTotalOrders(branchId))
+                .occupancyRate(calculateOccupancyRate(branchId))
                 .damageRate(calculateDamageRate(branchId))
                 .topModels(getTopModels(branchId))
                 .revenueTrend(getRevenueTrendLast30Days(branchId))
                 .build();
     }
 
-    private BigDecimal calculateMonthlyRevenue(UUID branchId) {
-        String query = "SELECT SUM(total_price) FROM orders WHERE status = 'RETURNED' " +
-                "AND actual_end_date >= date_trunc('month', now())";
+    private BigDecimal calculateTotalRevenue(UUID branchId) {
+        String query = "SELECT SUM(total_price) FROM orders WHERE status IN ('RETURNED', 'CLOSED')";
         if (branchId != null) {
             query += " AND branch_start_id = :branchId";
         }
@@ -42,10 +41,10 @@ public class ReportingService {
         return result != null ? (BigDecimal) result : BigDecimal.ZERO;
     }
 
-    private Long countMonthlyOrders(UUID branchId) {
-        String query = "SELECT COUNT(*) FROM orders WHERE actual_end_date >= date_trunc('month', now())";
+    private Long countTotalOrders(UUID branchId) {
+        String query = "SELECT COUNT(*) FROM orders";
         if (branchId != null) {
-            query += " AND branch_start_id = :branchId";
+            query += " WHERE branch_start_id = :branchId";
         }
         var nativeQuery = entityManager.createNativeQuery(query);
         if (branchId != null) nativeQuery.setParameter("branchId", branchId);
@@ -53,32 +52,27 @@ public class ReportingService {
         return ((Number) result).longValue();
     }
 
-    private Double calculateAverageOccupancy(UUID branchId) {
-        String rentedQuery = "SELECT COUNT(*) FROM equipment_items WHERE status = 'RENTED'";
-        String totalQuery = "SELECT COUNT(*) FROM equipment_items";
-        if (branchId != null) {
-            rentedQuery += " AND branch_id = :branchId";
-            totalQuery += " WHERE branch_id = :branchId";
-        }
+    private Double calculateOccupancyRate(UUID branchId) {
+        if (branchId == null) return 0.0; // Global occupancy requires summing capacities, keeping it simple for now
+
+        String itemsQuery = "SELECT COUNT(*) FROM equipment_items WHERE branch_id = :branchId " +
+                "AND status IN ('AVAILABLE', 'RESERVED', 'MAINTENANCE')";
+        String capacityQuery = "SELECT storage_capacity FROM branches WHERE id = :branchId";
         
-        var nRented = entityManager.createNativeQuery(rentedQuery);
-        var nTotal = entityManager.createNativeQuery(totalQuery);
-        if (branchId != null) {
-            nRented.setParameter("branchId", branchId);
-            nTotal.setParameter("branchId", branchId);
-        }
+        var nItems = entityManager.createNativeQuery(itemsQuery).setParameter("branchId", branchId);
+        var nCapacity = entityManager.createNativeQuery(capacityQuery).setParameter("branchId", branchId);
 
-        Object rented = nRented.getSingleResult();
-        Object total = nTotal.getSingleResult();
+        long itemsCount = ((Number) nItems.getSingleResult()).longValue();
+        int capacity = ((Number) nCapacity.getSingleResult()).intValue();
 
-        long t = ((Number) total).longValue();
-        if (t == 0) return 0.0;
-        return (((Number) rented).doubleValue() / t) * 100;
+        if (capacity == 0) return 0.0;
+        return (double) itemsCount / capacity * 100.0;
     }
 
     private Double calculateDamageRate(UUID branchId) {
-        String damagedQuery = "SELECT COUNT(*) FROM equipment_items WHERE condition = 'DAMAGED'";
+        String damagedQuery = "SELECT COUNT(*) FROM equipment_items WHERE (status = 'BROKEN' OR condition = 'DAMAGED')";
         String totalQuery = "SELECT COUNT(*) FROM equipment_items";
+        
         if (branchId != null) {
             damagedQuery += " AND branch_id = :branchId";
             totalQuery += " WHERE branch_id = :branchId";
@@ -91,12 +85,11 @@ public class ReportingService {
             nTotal.setParameter("branchId", branchId);
         }
 
-        Object damaged = nDamaged.getSingleResult();
-        Object total = nTotal.getSingleResult();
+        long damaged = ((Number) nDamaged.getSingleResult()).longValue();
+        long total = ((Number) nTotal.getSingleResult()).longValue();
         
-        long t = ((Number) total).longValue();
-        if (t == 0) return 0.0;
-        return (((Number) damaged).doubleValue() / t) * 100;
+        if (total == 0) return 0.0;
+        return (double) damaged / total * 100.0;
     }
 
     private List<DashboardStats.TopModel> getTopModels(UUID branchId) {

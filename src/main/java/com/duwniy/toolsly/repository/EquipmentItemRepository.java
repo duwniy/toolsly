@@ -21,6 +21,7 @@ public interface EquipmentItemRepository extends JpaRepository<EquipmentItem, UU
     @Query("SELECT i FROM EquipmentItem i LEFT JOIN FETCH i.model m LEFT JOIN FETCH i.branch b LEFT JOIN FETCH m.category WHERE b.id = :branchId")
     List<EquipmentItem> findByBranchIdWithDetails(@Param("branchId") UUID branchId);
 
+    @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT i FROM EquipmentItem i WHERE i.model.id = :modelId AND i.branch.id = :branchId AND i.status = :status")
     List<EquipmentItem> findFirstByModelIdAndBranchIdAndStatus(
             @Param("modelId") UUID modelId,

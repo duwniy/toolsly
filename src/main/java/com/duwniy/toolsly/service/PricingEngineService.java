@@ -2,7 +2,8 @@ package com.duwniy.toolsly.service;
 
 import com.duwniy.toolsly.dto.PriceQuote;
 import com.duwniy.toolsly.entity.EquipmentModel;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -13,12 +14,13 @@ import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 
 @Service
-@Slf4j
 public class PricingEngineService {
+    private static final Logger log = LoggerFactory.getLogger(PricingEngineService.class);
 
     public PriceQuote calculatePrice(EquipmentModel model, OffsetDateTime start, OffsetDateTime end) {
         log.info("Calculating price for model={}, from={} to={}", model.getName(), start, end);
-        long days = ChronoUnit.DAYS.between(start, end);
+        long minutes = ChronoUnit.MINUTES.between(start, end);
+        long days = (long) Math.ceil((double) minutes / (24 * 60));
         if (days <= 0) days = 1;
 
         BigDecimal dailyBase = model.getBaseDailyPrice();
@@ -45,10 +47,17 @@ public class PricingEngineService {
         BigDecimal total = priceBeforeDiscount.subtract(discountSum);
 
         PriceQuote quote = PriceQuote.builder()
+                .basePrice(baseSum)
+                .weekendMarkup(markupSum)
+                .discountAmount(discountSum)
                 .totalPrice(total)
-                .days(days)
+                .rentalDays((int) days)
+                .markupReasons(markupSum.compareTo(BigDecimal.ZERO) > 0 ? java.util.List.of("Weekend Premium (+20%)") : new java.util.ArrayList<>())
+                .discountReasons(discountSum.compareTo(BigDecimal.ZERO) > 0 ? java.util.List.of("Long-term Discount (-10%)") : new java.util.ArrayList<>())
                 .build();
-        log.info("Price calculation result: total={}, days={}, discount={}", total, days, discountSum);
+
+        log.info("Detailed Price: Base={}, Markup={}, Discount={}, Total={}, Days={}", 
+                baseSum, markupSum, discountSum, total, days);
         return quote;
     }
 }

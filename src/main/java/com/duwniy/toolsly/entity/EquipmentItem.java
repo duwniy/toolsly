@@ -42,4 +42,8 @@ public class EquipmentItem extends BaseEntity {
 
     @Column(name = "reserved_until")
     private OffsetDateTime reservedUntil;
+
+
+    @Column(name = "total_rental_days", nullable = false)
+    private Integer totalRentalDays = 0;
 }

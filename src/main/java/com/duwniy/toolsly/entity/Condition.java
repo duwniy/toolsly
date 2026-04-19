@@ -4,5 +4,6 @@ public enum Condition {
     NEW,
     USED,
     WORN,
-    DAMAGED
+    DAMAGED,
+    BROKEN
 }

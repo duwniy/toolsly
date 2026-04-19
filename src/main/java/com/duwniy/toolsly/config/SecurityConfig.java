@@ -30,6 +30,7 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthFilter;
     private final AuthenticationProvider authenticationProvider;
+    private final ObjectMapper objectMapper;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -88,9 +89,6 @@ public class SecurityConfig {
                                     HttpStatus status) throws IOException {
         response.setStatus(status.value());
         response.setContentType("application/json");
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule());
-        mapper.disable(com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-        response.getWriter().write(mapper.writeValueAsString(error));
+        response.getWriter().write(objectMapper.writeValueAsString(error));
     }
 }

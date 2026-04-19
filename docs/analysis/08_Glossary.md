@@ -9,6 +9,7 @@
 | **Model** | Модель | Тип оборудования (Makita HR2470) с базовой ценой и спецификациями. |
 | **Soft Lock** | Мягкая блокировка | Temporal reservation (15 min) of an Item during checkout window. |
 | **Order** | Заказ | Документ аренды, фиксирующий сроки, цену и участвующие стороны. |
-| **Condition** | Состояние | Текущее физическое состояние экземпляра: `NEW`, `USED`, `DAMAGED`. |
+| **Condition** | Состояние | Текущее физическое состояние экземпляра: `NEW`, `USED`, `WORN`, `DAMAGED`, `BROKEN`. |
+| **Audit Log** | Журнал аудита | Immutable history of state changes (e.g., condition history, status updates). |
 | **Verified** | Верифицирован | Flag for Users, mandatory for high-value items (>5000 RUB). |
 | **Optimistic Lock** | Оптимистичная блок-ка | Concurrency control using `@Version` to prevent double-booking. |

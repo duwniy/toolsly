@@ -62,4 +62,20 @@ public class Order extends BaseEntity {
 
     @Column(name = "actual_end_date")
     private OffsetDateTime actualEndDate;
+
+    @Column(name = "reserved_until")
+    private OffsetDateTime reservedUntil;
+
+    @Column(name = "issued_at")
+    private OffsetDateTime issuedAt;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "target_branch_id")
+    private Branch targetBranch;
+
+    @Column(name = "staff_comment")
+    private String staffComment;
+
+    @Column(name = "is_incident")
+    private Boolean isIncident = false;
 }

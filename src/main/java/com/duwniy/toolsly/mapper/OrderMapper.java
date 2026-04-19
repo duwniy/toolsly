@@ -17,8 +17,9 @@ public interface OrderMapper {
     @Mapping(target = "staffEmail", source = "staff.email")
     @Mapping(target = "branchStartId", source = "branchStart.id")
     @Mapping(target = "branchStartName", source = "branchStart.name")
-    @Mapping(target = "branchEndId", source = "branchEnd.id")
     @Mapping(target = "branchEndName", source = "branchEnd.name")
+    @Mapping(target = "targetBranchId", source = "targetBranch.id")
+    @Mapping(target = "targetBranchName", source = "targetBranch.name")
     OrderResponse toResponse(Order entity);
 
     @Mapping(target = "renter.id", source = "renterId")

@@ -2,6 +2,7 @@ package com.duwniy.toolsly.controller;
 
 import com.duwniy.toolsly.dto.*;
 import com.duwniy.toolsly.entity.Order;
+import com.duwniy.toolsly.repository.OrderRepository;
 import com.duwniy.toolsly.mapper.OrderMapper;
 import com.duwniy.toolsly.service.OrderService;
 import com.duwniy.toolsly.service.PricingEngineService;
@@ -16,22 +17,38 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import lombok.extern.slf4j.Slf4j;
-
+import java.util.List;
 import java.util.UUID;
+import java.util.Collection;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/orders")
-@RequiredArgsConstructor
 @Tag(name = "Orders", description = "Endpoints for tool rental order lifecycle management")
-@Slf4j
 public class OrderController {
+
+    private static final Logger log = LoggerFactory.getLogger(OrderController.class);
 
     private final OrderService orderService;
     private final OrderMapper orderMapper;
     private final PricingEngineService pricingEngine;
     private final EquipmentModelRepository modelRepository;
+    private final OrderRepository orderRepository;
+
+    public OrderController(OrderService orderService,
+                           OrderMapper orderMapper,
+                           PricingEngineService pricingEngine,
+                           EquipmentModelRepository modelRepository,
+                           OrderRepository orderRepository) {
+        this.orderService = orderService;
+        this.orderMapper = orderMapper;
+        this.pricingEngine = pricingEngine;
+        this.modelRepository = modelRepository;
+        this.orderRepository = orderRepository;
+    }
 
     @PostMapping("/calculate-quote")
     @Operation(summary = "Calculate order price breakdown", description = "Returns base price, markups, and discounts")
@@ -100,5 +117,53 @@ public class OrderController {
         log.info("REST request to return tools for order ID: {}", id);
         orderService.returnOrder(id, request);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/my")
+    @Operation(summary = "Get current user's order history", description = "Returns all orders where the authenticated user is the renter")
+    public ResponseEntity<java.util.List<OrderResponse>> getMyOrders() {
+        log.info("REST request to get current user's orders");
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        UUID renterId = null;
+        if (auth != null && auth.getPrincipal() instanceof ToolslyUserPrincipal principal) {
+            renterId = principal.getUserId();
+        } else {
+            throw new BusinessException("User must be authenticated", "AUTH_REQUIRED");
+        }
+        return ResponseEntity.ok(orderService.getOrdersByRenter(renterId));
+    }
+
+    @PatchMapping("/{id}/request-return")
+    @Operation(summary = "Initial return request by user", description = "Moves order to RETURN_PENDING status and validates branch capacity")
+    public ResponseEntity<Void> requestReturn(@PathVariable UUID id, @RequestParam UUID targetBranchId) {
+        log.info("REST request to initiate return for order ID: {} to branch: {}", id, targetBranchId);
+        orderService.requestReturn(id, targetBranchId);
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/finances")
+    @Operation(summary = "Get current user's financial overview", description = "Returns total spent, active costs, and potential fines")
+    public ResponseEntity<UserFinancesResponse> getUserFinances() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.getPrincipal() instanceof ToolslyUserPrincipal principal) {
+            return ResponseEntity.ok(orderService.getUserFinances(principal.getUserId()));
+        }
+        throw new BusinessException("User must be authenticated", "AUTH_REQUIRED");
+    }
+
+    @GetMapping("/returned")
+    @Operation(summary = "Get recent returns", description = "Returns last 20 orders returned to the branch")
+    public ResponseEntity<java.util.List<OrderResponse>> getReturnedOrders(
+            @RequestParam UUID branchId
+    ) {
+        log.info("REST request to get recent returns for branch: {}", branchId);
+        java.util.List<com.duwniy.toolsly.entity.OrderStatus> returnStatuses = java.util.List.of(
+                com.duwniy.toolsly.entity.OrderStatus.RETURNED,
+                com.duwniy.toolsly.entity.OrderStatus.CLOSED
+        );
+        return ResponseEntity.ok(orderRepository.findTop20ByBranchEndIdAndStatusInOrderByActualEndDateDesc(branchId, returnStatuses)
+                .stream()
+                .map(orderMapper::toResponse)
+                .toList());
     }
 }

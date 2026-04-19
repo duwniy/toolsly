@@ -8,8 +8,9 @@ This document defines the formulas and data sources for the management dashboard
 - **Goal**: Monitor business growth and seasonal peaks.
 
 ## 🏗️ Operations KPI: Branch Occupancy
-- **Target**: Efficiency of storage utilization.
+- **Target**: Efficiency of storage utilization per branch.
 - **Formula**: `(ItemsCount / StorageCapacity) * 100`.
+- **Logic**: Counts specifically items with `branch_id == :branchId`.
 - **Visualization**: Radial Gauge or Bar chart (one per branch).
 - **Warning Threshold**: > 80% (indicates logistics pressure).
 

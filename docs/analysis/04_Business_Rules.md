@@ -17,8 +17,8 @@ The system automates price calculation based on the following logic:
 ## 4. Penalty Logic
 - **Overdue Penalty**: `+50%` of daily rate for each overdue day.
 - **Damage Scenarios**:
-  - `GOOD`: No penalty.
-  - `WORN`: `10%` of equipment market value.
+  - `GOOD` / `USED` / `WORN`: No direct financial penalty (Wear-and-tear tracking).
+  - `DAMAGED`: `30%` of equipment market value.
   - `BROKEN`: `50%` of equipment market value.
 
 ## 4. Concurrency (Soft Lock)
