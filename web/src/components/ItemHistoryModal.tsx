@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { X, Clock, User, MessageSquare, AlertTriangle } from 'lucide-react';
+import { X, Clock, User, MessageSquare } from 'lucide-react';
 import apiClient from '../api/apiClient';
 
 interface HistoryEntry {

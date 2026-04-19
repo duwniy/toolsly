@@ -302,7 +302,7 @@ function CountdownTimer({ reservedUntil }: { reservedUntil: string }) {
   );
 }
 
-function AccruedCostCounter({ initialValue, issuedAt }: { initialValue: number, issuedAt: string }) {
+function AccruedCostCounter({ initialValue }: { initialValue: number, issuedAt: string }) {
   const [currentValue, setCurrentValue] = useState(initialValue);
 
   useEffect(() => {

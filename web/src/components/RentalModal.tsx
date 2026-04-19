@@ -68,7 +68,7 @@ export default function RentalModal({ isOpen, onClose, item }: RentalModalProps)
   const handleBooking = async () => {
     setBooking(true);
     try {
-      const { data } = await apiClient.post('/api/orders/wizard-reserve', {
+      await apiClient.post('/api/orders/wizard-reserve', {
         modelId: item.modelId,
         branchId: item.branchId,
         endDate: new Date(endDate).toISOString()
