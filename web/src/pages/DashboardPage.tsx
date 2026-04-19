@@ -88,13 +88,13 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-8 pb-12">
-      <div className="flex justify-between items-end">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4">
         <div>
-          <h1 className="text-3xl font-semibold tracking-tight mb-1">Dashboard</h1>
-          <p className="text-neutral-400">Real-time business intelligence and asset health</p>
+          <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-1">Dashboard</h1>
+          <p className="text-neutral-400 text-sm sm:text-base">Real-time business intelligence and asset health</p>
         </div>
         <div className="flex gap-2">
-          <div className="px-4 py-2 bg-black text-white rounded-lg text-sm font-medium flex items-center gap-2">
+          <div className="px-3 sm:px-4 py-2 bg-black text-white rounded-lg text-sm font-medium flex items-center gap-2">
             <Activity className="w-4 h-4" /> Live
           </div>
         </div>
@@ -131,16 +131,16 @@ export default function DashboardPage() {
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
-        <div className="bg-white p-8 rounded-2xl border border-neutral-100">
-          <div className="flex justify-between items-center mb-6">
-            <h3 className="text-lg font-semibold tracking-tight">Revenue Trend</h3>
-            <select className="bg-neutral-50 border border-neutral-100 rounded-lg text-sm font-medium px-3 py-2 outline-none focus:border-neutral-200">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8 mt-6 sm:mt-8">
+        <div className="bg-white p-4 sm:p-6 lg:p-8 rounded-2xl border border-neutral-100">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4 sm:mb-6">
+            <h3 className="text-base sm:text-lg font-semibold tracking-tight">Revenue Trend</h3>
+            <select className="bg-neutral-50 border border-neutral-100 rounded-lg text-sm font-medium px-3 py-2 outline-none focus:border-neutral-200 w-full sm:w-auto">
               <option>Last 30 Days</option>
               <option>Last 6 Months</option>
             </select>
           </div>
-          <div className="h-[320px] w-full">
+          <div className="h-[250px] sm:h-[280px] lg:h-[320px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={stats?.revenueTrend}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f5f5f5" />
@@ -177,9 +177,9 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div className="bg-white p-8 rounded-2xl border border-neutral-100">
-          <h3 className="text-lg font-semibold tracking-tight mb-6">Top Rental Models</h3>
-          <div className="h-[320px] w-full">
+        <div className="bg-white p-4 sm:p-6 lg:p-8 rounded-2xl border border-neutral-100">
+          <h3 className="text-base sm:text-lg font-semibold tracking-tight mb-4 sm:mb-6">Top Rental Models</h3>
+          <div className="h-[250px] sm:h-[280px] lg:h-[320px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={stats?.topModels} layout="vertical">
                 <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f5f5f5" />

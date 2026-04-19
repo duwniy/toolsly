@@ -66,16 +66,16 @@ export default function MyOrdersPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8">
+    <div className="max-w-4xl mx-auto space-y-6 sm:space-y-8">
       <div>
-        <h1 className="text-3xl font-semibold tracking-tight text-neutral-900">My Orders</h1>
-        <p className="text-neutral-500 mt-1">Manage your active rentals and order history.</p>
+        <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-neutral-900">My Orders</h1>
+        <p className="text-neutral-500 mt-1 text-sm sm:text-base">Manage your active rentals and order history.</p>
       </div>
 
-      <div className="flex bg-neutral-100 p-1 rounded-xl w-fit">
+      <div className="flex bg-neutral-100 p-1 rounded-xl w-full sm:w-fit">
         <button
           onClick={() => setActiveTab('active')}
-          className={`px-6 py-2 rounded-lg text-sm font-medium transition-all ${
+          className={`flex-1 sm:flex-initial px-4 sm:px-6 py-2 rounded-lg text-sm font-medium transition-all ${
             activeTab === 'active' 
               ? 'bg-white text-neutral-900 shadow-sm' 
               : 'text-neutral-500 hover:text-neutral-700'
@@ -85,7 +85,7 @@ export default function MyOrdersPage() {
         </button>
         <button
           onClick={() => setActiveTab('history')}
-          className={`px-6 py-2 rounded-lg text-sm font-medium transition-all ${
+          className={`flex-1 sm:flex-initial px-4 sm:px-6 py-2 rounded-lg text-sm font-medium transition-all ${
             activeTab === 'history' 
               ? 'bg-white text-neutral-900 shadow-sm' 
               : 'text-neutral-500 hover:text-neutral-700'
@@ -161,10 +161,10 @@ function OrderCard({ order, onUpdate }: { order: Order; onUpdate: () => void }) 
   
   return (
     <div className="bg-white border border-neutral-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-      <div className="p-6">
-        <div className="flex justify-between items-start mb-4">
+      <div className="p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 sm:gap-4 mb-4">
           <div>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
               <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
                 status === 'RESERVED' ? 'bg-amber-100 text-amber-700' :
                 status === 'ISSUED' ? 'bg-blue-100 text-blue-700' :
@@ -173,15 +173,15 @@ function OrderCard({ order, onUpdate }: { order: Order; onUpdate: () => void }) 
               }`}>
                 {status.replace('_', ' ')}
               </span>
-              <span className="text-sm font-medium text-neutral-500">#{order.id.substring(0, 8)}</span>
+              <span className="text-xs sm:text-sm font-medium text-neutral-500">#{order.id.substring(0, 8)}</span>
             </div>
-            <h3 className="text-lg font-medium mt-1">
+            <h3 className="text-base sm:text-lg font-medium mt-1">
               {order.items.map((i, idx) => i.model?.name || `Item ${idx+1}`).join(', ')}
             </h3>
           </div>
-          <div className="text-right">
-            <p className="text-sm text-neutral-500">{status === 'ISSUED' ? 'Accrued Cost' : 'Price'}</p>
-            <p className={`text-xl font-semibold ${status === 'ISSUED' ? 'text-blue-600' : ''}`}>
+          <div className="sm:text-right flex sm:flex-col justify-between sm:justify-start items-center sm:items-end">
+            <p className="text-xs sm:text-sm text-neutral-500">{status === 'ISSUED' ? 'Accrued Cost' : 'Price'}</p>
+            <p className={`text-lg sm:text-xl font-semibold ${status === 'ISSUED' ? 'text-blue-600' : ''}`}>
               {status === 'ISSUED' && order.currentAccruedPrice !== null ? (
                 <AccruedCostCounter initialValue={order.currentAccruedPrice} issuedAt={order.issuedAt!} />
               ) : (
@@ -192,7 +192,7 @@ function OrderCard({ order, onUpdate }: { order: Order; onUpdate: () => void }) 
         </div>
 
         {status === 'RESERVED' && order.reservedUntil && (
-          <div className="mb-4 bg-amber-50 p-3 rounded-xl border border-amber-100 flex items-center justify-between">
+          <div className="mb-4 bg-amber-50 p-3 rounded-xl border border-amber-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div className="flex items-center gap-2 text-amber-800 text-sm font-medium">
               <Clock className="w-4 h-4" />
               Reservation expires in:
@@ -201,19 +201,19 @@ function OrderCard({ order, onUpdate }: { order: Order; onUpdate: () => void }) 
           </div>
         )}
 
-        <div className="grid grid-cols-2 gap-8 pt-4 border-t border-neutral-100">
+        <div className="grid grid-cols-2 gap-4 sm:gap-8 pt-4 border-t border-neutral-100">
           <div>
-            <p className="text-xs text-neutral-400 uppercase font-bold tracking-widest mb-1">Rented On</p>
-            <p className="text-sm font-medium">{formatDate(order.createdAt)}</p>
+            <p className="text-[10px] sm:text-xs text-neutral-400 uppercase font-bold tracking-widest mb-1">Rented On</p>
+            <p className="text-xs sm:text-sm font-medium">{formatDate(order.createdAt)}</p>
           </div>
           <div>
-            <p className="text-xs text-neutral-400 uppercase font-bold tracking-widest mb-1">Return Due</p>
-            <p className="text-sm font-medium">{formatDate(order.plannedEndDate)}</p>
+            <p className="text-[10px] sm:text-xs text-neutral-400 uppercase font-bold tracking-widest mb-1">Return Due</p>
+            <p className="text-xs sm:text-sm font-medium">{formatDate(order.plannedEndDate)}</p>
           </div>
         </div>
 
         {status === 'ISSUED' && (
-          <div className="mt-6">
+          <div className="mt-4 sm:mt-6">
             {!showBranchSelect ? (
               <button 
                 onClick={fetchBranches}
@@ -253,11 +253,11 @@ function OrderCard({ order, onUpdate }: { order: Order; onUpdate: () => void }) 
         )}
 
         {status === 'RETURN_PENDING' && (
-          <div className="mt-6 p-4 bg-purple-50 rounded-xl border border-purple-100 flex items-start gap-3">
-            <Clock className="w-4 h-4 text-purple-600 mt-0.5" />
+          <div className="mt-4 sm:mt-6 p-3 sm:p-4 bg-purple-50 rounded-xl border border-purple-100 flex items-start gap-3">
+            <Clock className="w-4 h-4 text-purple-600 mt-0.5 flex-shrink-0" />
             <div>
               <p className="text-xs font-bold text-purple-900 uppercase tracking-wider">Return Pending</p>
-              <p className="text-sm text-purple-700 mt-0.5">
+              <p className="text-xs sm:text-sm text-purple-700 mt-0.5">
                 Drop off items at <strong className="text-purple-900">{order.targetBranchName}</strong>. 
                 Staff will inspect conditions and finalize the order.
               </p>

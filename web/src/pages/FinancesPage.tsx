@@ -44,13 +44,13 @@ export default function FinancesPage() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8">
+    <div className="max-w-6xl mx-auto space-y-6 sm:space-y-8">
       <div>
-        <h1 className="text-3xl font-semibold tracking-tight text-neutral-900">Finances</h1>
-        <p className="text-neutral-500 mt-1">Track your spending and manage rental costs.</p>
+        <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-neutral-900">Finances</h1>
+        <p className="text-neutral-500 mt-1 text-sm sm:text-base">Track your spending and manage rental costs.</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         <StatCard 
           title="Total Spent" 
           value={`RUB ${(stats?.totalSpent || 0).toLocaleString()}`} 
@@ -76,44 +76,77 @@ export default function FinancesPage() {
       </div>
 
       <div className="bg-white border border-neutral-200 rounded-2xl overflow-hidden shadow-sm">
-        <div className="p-6 border-b border-neutral-100 flex items-center justify-between">
-          <h2 className="text-lg font-semibold flex items-center gap-2">
+        <div className="p-4 sm:p-6 border-b border-neutral-100 flex items-center justify-between">
+          <h2 className="text-base sm:text-lg font-semibold flex items-center gap-2">
             <History className="w-5 h-5 text-neutral-400" />
             Payment History
           </h2>
         </div>
-        <div className="overflow-x-auto">
+        
+        {/* Mobile Cards View */}
+        <div className="sm:hidden divide-y divide-neutral-100">
+          {stats?.recentPayments.length === 0 ? (
+            <div className="px-4 py-12 text-center text-neutral-400">
+              No payment history available
+            </div>
+          ) : (
+            stats?.recentPayments.map((p) => (
+              <div key={p.id} className="p-4 space-y-3">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="font-medium text-neutral-900">{p.toolName}</p>
+                    <p className="text-xs text-neutral-500 mt-0.5">
+                      {new Date(p.startDate).toLocaleDateString()} — {p.endDate !== 'N/A' ? new Date(p.endDate).toLocaleDateString() : 'Active'}
+                    </p>
+                  </div>
+                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                    p.status === 'CLOSED' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
+                  }`}>
+                    {p.status}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center pt-2 border-t border-neutral-50">
+                  <span className="text-xs text-neutral-400 uppercase">Amount</span>
+                  <span className="font-semibold">RUB {p.finalPrice.toLocaleString()}</span>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* Desktop Table View */}
+        <div className="hidden sm:block overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-neutral-50 text-neutral-500 uppercase text-[10px] font-bold tracking-widest border-b border-neutral-100">
-                <th className="px-6 py-4">Tool</th>
-                <th className="px-6 py-4">Period</th>
-                <th className="px-6 py-4">Status</th>
-                <th className="px-6 py-4 text-right">Amount</th>
+                <th className="px-4 lg:px-6 py-4">Tool</th>
+                <th className="px-4 lg:px-6 py-4">Period</th>
+                <th className="px-4 lg:px-6 py-4">Status</th>
+                <th className="px-4 lg:px-6 py-4 text-right">Amount</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-100 text-sm">
               {stats?.recentPayments.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="px-6 py-12 text-center text-neutral-400">
+                  <td colSpan={4} className="px-4 lg:px-6 py-12 text-center text-neutral-400">
                     No payment history available
                   </td>
                 </tr>
               ) : (
                 stats?.recentPayments.map((p) => (
                   <tr key={p.id} className="hover:bg-neutral-50 transition-colors">
-                    <td className="px-6 py-4 font-medium text-neutral-900">{p.toolName}</td>
-                    <td className="px-6 py-4 text-neutral-500">
+                    <td className="px-4 lg:px-6 py-4 font-medium text-neutral-900">{p.toolName}</td>
+                    <td className="px-4 lg:px-6 py-4 text-neutral-500">
                       {new Date(p.startDate).toLocaleDateString()} — {p.endDate !== 'N/A' ? new Date(p.endDate).toLocaleDateString() : 'Active'}
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-4 lg:px-6 py-4">
                       <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
                         p.status === 'CLOSED' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
                       }`}>
                         {p.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-right font-semibold">
+                    <td className="px-4 lg:px-6 py-4 text-right font-semibold">
                       RUB {p.finalPrice.toLocaleString()}
                     </td>
                   </tr>
