@@ -16,6 +16,7 @@ import com.duwniy.toolsly.security.ToolslyUserPrincipal;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,6 +29,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/orders")
 @Tag(name = "Orders", description = "Endpoints for tool rental order lifecycle management")
+@RequiredArgsConstructor
 public class OrderController {
 
     private static final Logger log = LoggerFactory.getLogger(OrderController.class);
@@ -37,18 +39,6 @@ public class OrderController {
     private final PricingEngineService pricingEngine;
     private final EquipmentModelRepository modelRepository;
     private final OrderRepository orderRepository;
-
-    public OrderController(OrderService orderService,
-                           OrderMapper orderMapper,
-                           PricingEngineService pricingEngine,
-                           EquipmentModelRepository modelRepository,
-                           OrderRepository orderRepository) {
-        this.orderService = orderService;
-        this.orderMapper = orderMapper;
-        this.pricingEngine = pricingEngine;
-        this.modelRepository = modelRepository;
-        this.orderRepository = orderRepository;
-    }
 
     @PostMapping("/calculate-quote")
     @Operation(summary = "Calculate order price breakdown", description = "Returns base price, markups, and discounts")
@@ -104,6 +94,7 @@ public class OrderController {
     }
 
     @PostMapping("/{id}/issue")
+    @PreAuthorize("hasRole('STAFF')")
     @Operation(summary = "Выдача инструментов клиенту (требуется верификация для дорогих позиций)", description = "Moves order to ISSUED status. Requires staffId.")
     public ResponseEntity<Void> issueOrder(@PathVariable UUID id, @RequestParam UUID staffId) {
         log.info("REST request to issue tools for order ID: {}, staff ID: {}", id, staffId);
@@ -112,6 +103,7 @@ public class OrderController {
     }
 
     @PostMapping("/{id}/return")
+    @PreAuthorize("hasRole('STAFF')")
     @Operation(summary = "Прием инструментов и автоматический расчет штрафов за повреждения", description = "Moves order to RETURNED status and sets actual end date")
     public ResponseEntity<Void> returnOrder(@PathVariable UUID id, @RequestBody ReturnRequest request) {
         log.info("REST request to return tools for order ID: {}", id);
@@ -135,9 +127,9 @@ public class OrderController {
 
     @PatchMapping("/{id}/request-return")
     @Operation(summary = "Initial return request by user", description = "Moves order to RETURN_PENDING status and validates branch capacity")
-    public ResponseEntity<Void> requestReturn(@PathVariable UUID id, @RequestParam UUID targetBranchId) {
-        log.info("REST request to initiate return for order ID: {} to branch: {}", id, targetBranchId);
-        orderService.requestReturn(id, targetBranchId);
+    public ResponseEntity<Void> requestReturn(@PathVariable UUID id, @RequestBody RequestReturnRequest request) {
+        log.info("Return requested for order {} to branch {}", id, request.getTargetBranchId());
+        orderService.requestReturn(id, request.getTargetBranchId());
         return ResponseEntity.ok().build();
     }
 
@@ -173,6 +165,28 @@ public class OrderController {
             @RequestParam UUID branchId
     ) {
         log.info("REST request to get active reserved orders for branch: {}", branchId);
+        java.util.List<com.duwniy.toolsly.entity.OrderStatus> reservedStatuses = java.util.List.of(
+                com.duwniy.toolsly.entity.OrderStatus.RESERVED
+        );
+        return ResponseEntity.ok(orderRepository.findTop20ByBranchStartIdAndStatusInOrderByCreatedAtDesc(branchId, reservedStatuses)
+                .stream()
+                .map(orderMapper::toResponse)
+                .toList());
+    }
+
+    @GetMapping("/ready-to-issue")
+    @PreAuthorize("hasRole('STAFF')")
+    @Operation(summary = "Get orders ready to issue", description = "Returns all RESERVED orders for the authenticated staff member's branch")
+    public ResponseEntity<java.util.List<OrderResponse>> getReadyToIssueOrders() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !(auth.getPrincipal() instanceof ToolslyUserPrincipal principal)) {
+            throw new BusinessException("User must be authenticated", "AUTH_REQUIRED");
+        }
+        UUID branchId = principal.getBranchId();
+        if (branchId == null) {
+            throw new BusinessException("Staff must be assigned to a branch", "NO_BRANCH");
+        }
+        log.info("REST request to get ready-to-issue orders for staff branch: {}", branchId);
         java.util.List<com.duwniy.toolsly.entity.OrderStatus> reservedStatuses = java.util.List.of(
                 com.duwniy.toolsly.entity.OrderStatus.RESERVED
         );

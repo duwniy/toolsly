@@ -133,12 +133,13 @@ function OrderCard({ order, onUpdate }: { order: Order; onUpdate: () => void }) 
   const handleInitiateReturn = async (branchId: string) => {
     setRequestingReturn(true);
     try {
-      await apiClient.patch(`/api/orders/${order.id}/request-return?targetBranchId=${branchId}`);
+      await apiClient.patch(`/api/orders/${order.id}/request-return`, { targetBranchId: branchId });
       toast.success('Return requested successfully!');
       setShowBranchSelect(false);
       onUpdate();
     } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Failed to request return');
+      const message = err.response?.data?.message || 'Failed to request return';
+      toast.error(message);
     } finally {
       setRequestingReturn(false);
     }
@@ -150,7 +151,7 @@ function OrderCard({ order, onUpdate }: { order: Order; onUpdate: () => void }) 
       return;
     }
     try {
-      const { data } = await apiClient.get('/api/branches');
+      const { data } = await apiClient.get('/api/inventory/branches');
       setBranches(data);
       setShowBranchSelect(true);
     } catch (err) {

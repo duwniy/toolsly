@@ -23,7 +23,7 @@ public class ReservationCleaner {
     private final EquipmentItemRepository itemRepository;
     private final OrderRepository orderRepository;
 
-    @Scheduled(fixedRate = 60000) // Every minute
+    @Scheduled(fixedRate = 600000) // Every 10 minutes
     @Transactional
     public void cleanupExpiredReservations() {
         OffsetDateTime now = OffsetDateTime.now();

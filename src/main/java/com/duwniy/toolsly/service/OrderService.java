@@ -240,6 +240,8 @@ public class OrderService {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new BusinessException("Order not found", "ORDER_NOT_FOUND"));
 
+        enforceOrderAccess(order);
+
         if (order.getStatus() != OrderStatus.ISSUED) {
             throw new BusinessException("Only issued orders can initiate return", "INVALID_STATUS");
         }
